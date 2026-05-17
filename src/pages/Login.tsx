@@ -8,7 +8,7 @@ import { Wallet } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export function Login() {
-  const { session } = useAuth()
+  const { session, signInWithDemo } = useAuth()
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,6 +22,12 @@ export function Login() {
     e.preventDefault()
     setLoading(true)
     try {
+      if (email.toLowerCase() === 'demo@example.com') {
+        signInWithDemo(email)
+        toast.success('Successfully logged in as Demo User!')
+        return
+      }
+
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
@@ -43,6 +49,7 @@ export function Login() {
       setLoading(false)
     }
   }
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 p-4">
@@ -87,7 +94,30 @@ export function Login() {
           </Button>
         </form>
 
-        <div className="text-center text-sm">
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-white/10" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+          </div>
+        </div>
+
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="w-full border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-400 rounded-xl"
+          onClick={() => {
+            setEmail('demo@example.com')
+            setPassword('demo1234')
+            signInWithDemo('demo@example.com')
+            toast.success('Successfully logged in as Demo User!')
+          }}
+        >
+          Demo Sandbox Account
+        </Button>
+
+        <div className="text-center text-sm pt-2">
           <button
             onClick={() => setIsSignUp(!isSignUp)}
             className="text-primary hover:underline"
@@ -95,6 +125,7 @@ export function Login() {
             {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
           </button>
         </div>
+
       </div>
     </div>
   )
