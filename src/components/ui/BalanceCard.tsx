@@ -9,6 +9,8 @@ interface BalanceCardProps {
   monthlyGrowth?: number
 }
 
+const SafeCountUp = (CountUp as any).default || CountUp
+
 export function BalanceCard({ balance, monthlyGrowth = 0 }: BalanceCardProps) {
   const [showBalance, setShowBalance] = useState(true)
   const { formatAmount } = useCurrency()
@@ -35,11 +37,11 @@ export function BalanceCard({ balance, monthlyGrowth = 0 }: BalanceCardProps) {
         <div className="flex items-end gap-4">
           <div className="text-4xl md:text-5xl font-bold tracking-tight">
             {showBalance ? (
-              <CountUp
+              <SafeCountUp
                 end={balance}
                 duration={1.5}
                 decimals={2}
-                formattingFn={(val) => formatAmount(val)}
+                formattingFn={(val: number) => formatAmount(val)}
               />
             ) : (
               '••••••••'
