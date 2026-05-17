@@ -43,7 +43,8 @@ export function Diagnostics() {
 
     // Check Realtime Status
     try {
-      const channel = supabase.channel('health-check')
+      const channelId = Math.random().toString(36).substring(2, 9)
+      const channel = supabase.channel(`health-check-${channelId}`)
       channel.subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setRealtimeStatus('active')

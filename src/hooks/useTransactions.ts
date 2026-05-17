@@ -25,8 +25,9 @@ export function useTransactions() {
     }
     window.addEventListener('online', handleOnline)
 
+    const channelId = Math.random().toString(36).substring(2, 9)
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel(`schema-db-changes-${user.id}-${channelId}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${user.id}` },
