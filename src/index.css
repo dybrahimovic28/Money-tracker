@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Default Mode (Light/Classic) */
+    --background: 210 40% 98%; /* Soft gray/white */
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    /* Default Accent: Emerald */
+    --primary: 158 64% 52%; /* Emerald Green */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 158 64% 52%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 158 64% 52%;
+
+    --radius: 1rem; /* 16px radius for soft cards */
+    --glass-opacity: 1;
+    --glass-blur: 0px;
+    --glass-border: transparent;
+  }
+
+  .dark {
+    /* Deep Navy Dark Mode */
+    --background: 222 47% 7%; /* Deep navy blue background */
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 10%; /* Slightly lighter navy for cards */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 158 64% 52%; /* Emerald Green */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 158 64% 52%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 158 64% 52%;
+  }
+
+  /* Accents */
+  .accent-blue {
+    --primary: 221 83% 53%;
+    --ring: 221 83% 53%;
+    --accent: 221 83% 53%;
+  }
+  .accent-purple {
+    --primary: 262 83% 58%;
+    --ring: 262 83% 58%;
+    --accent: 262 83% 58%;
+  }
+  .accent-orange {
+    --primary: 24 98% 50%;
+    --ring: 24 98% 50%;
+    --accent: 24 98% 50%;
+  }
+  .accent-red {
+    --primary: 0 84% 60%;
+    --ring: 0 84% 60%;
+    --accent: 0 84% 60%;
+  }
+
+  /* Modes */
+  .mode-glass {
+    --glass-opacity: 0.7;
+    --glass-blur: 16px;
+    --glass-border: rgba(255, 255, 255, 0.1);
+  }
+  .dark.mode-glass {
+    --glass-opacity: 0.4;
+    --glass-border: rgba(255, 255, 255, 0.05);
+  }
+  .mode-compact {
+    --radius: 0.5rem;
+  }
+  .mode-comfortable {
+    --radius: 1.5rem;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background-color: hsla(var(--card) / var(--glass-opacity));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+  }
+  .glass-panel {
+    background: linear-gradient(135deg, hsla(var(--card) / 0.8) 0%, hsla(var(--card) / 0.4) 100%);
+    backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+  }
+}
