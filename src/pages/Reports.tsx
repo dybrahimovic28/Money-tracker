@@ -4,17 +4,16 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/button'
 import { useTransactions } from '@/hooks/useTransactions'
 import { useCurrency } from '@/context/CurrencyContext'
-import { useAuth } from '@/context/AuthContext'
+
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { format } from 'date-fns'
-import { FileText, Download, Calendar, Filter, Sparkles } from 'lucide-react'
+import { Calendar, Filter, Sparkles, Sheet } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { jsPDF } from 'jspdf'
-import 'jspdf-autotable'
+
 
 export function Reports() {
-  const { user } = useAuth()
+
   const { formatAmount } = useCurrency()
   const { transactions, isLoading } = useTransactions()
 
@@ -100,113 +99,6 @@ export function Reports() {
     toast.success('Successfully downloaded CSV financial statement')
   }
 
-  // Export to high-fidelity PDF Invoice Statement
-  const handleExportPDF = () => {
-    if (reportTransactions.length === 0) {
-      toast.error('No transactions available in selected period to export')
-      return
-    }
-
-    try {
-      const doc = new jsPDF()
-      
-      // Theme colors
-      const primaryColor = [11, 19, 41] // #0b1329 Deep Navy
-      
-      // Header Branding
-      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
-      doc.rect(0, 0, 210, 40, 'F')
-      
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(22)
-      doc.setFont('helvetica', 'bold')
-      doc.text('MONEY TRACKER', 15, 25)
-      
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'normal')
-      doc.text('PREMIUM FINANCE MANAGEMENT SUITE', 15, 32)
-      
-      // Statement Period
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(12)
-      doc.setFont('helvetica', 'bold')
-      const periodLabel = format(new Date(selectedYear, selectedMonth), 'MMMM yyyy').toUpperCase()
-      doc.text(`STATEMENT PERIOD: ${periodLabel}`, 120, 25)
-      
-      // Document Metadata info
-      doc.setTextColor(100, 100, 100)
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'normal')
-      doc.text(`Generated on: ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 15, 52)
-      doc.text(`Account User: ${user?.email || 'Guest Profile'}`, 15, 57)
-      
-      // Financial Summary Block
-      doc.setFillColor(240, 245, 255)
-      doc.roundedRect(15, 65, 180, 28, 3, 3, 'F')
-      
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(50, 50, 50)
-      doc.text('TOTAL INCOME', 25, 75)
-      doc.text('TOTAL EXPENSE', 85, 75)
-      doc.text('NET CASHFLOW', 145, 75)
-      
-      doc.setFontSize(14)
-      doc.setTextColor(16, 185, 129) // Emerald-500
-      doc.text(formatAmount(summary.income), 25, 84)
-      
-      doc.setTextColor(239, 68, 68) // Red-500
-      doc.text(formatAmount(summary.expenses), 85, 84)
-      
-      doc.setTextColor(summary.net >= 0 ? 16 : 239, summary.net >= 0 ? 185 : 68, summary.net >= 0 ? 129 : 68)
-      doc.text(formatAmount(summary.net), 145, 84)
-      
-      // Draw transaction list table
-      const columns = ['Date', 'Type', 'Category', 'Description', 'Amount']
-      const rows = reportTransactions.map(t => [
-        format(new Date(t.created_at), 'yyyy-MM-dd HH:mm'),
-        t.type.toUpperCase(),
-        t.category,
-        t.description || t.category,
-        t.type === 'income' ? `+${formatAmount(t.amount)}` : `-${formatAmount(t.amount)}`
-      ])
-
-      ;(doc as any).autoTable({
-        startY: 105,
-        head: [columns],
-        body: rows,
-        headStyles: {
-          fillColor: primaryColor,
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          fontSize: 10
-        },
-        bodyStyles: {
-          fontSize: 9,
-          textColor: [40, 40, 40]
-        },
-        alternateRowStyles: {
-          fillColor: [248, 250, 252]
-        },
-        margin: { left: 15, right: 15 },
-        theme: 'striped'
-      })
-
-      // Footer signoff
-      const pageCount = (doc as any).internal.getNumberOfPages()
-      doc.setFontSize(8)
-      doc.setTextColor(150, 150, 150)
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i)
-        doc.text('Thank you for choosing Money Tracker to achieve financial freedom. Page ' + i + ' of ' + pageCount, 15, 287)
-      }
-
-      doc.save(`money_tracker_statement_${selectedYear}_${selectedMonth + 1}.pdf`)
-      toast.success('Successfully downloaded high-fidelity PDF financial statement')
-    } catch (err: any) {
-      toast.error('Failed to compile PDF statement: ' + (err.message || err))
-    }
-  }
 
   if (isLoading) {
     return (
@@ -221,9 +113,9 @@ export function Reports() {
     return (
       <div className="h-[70vh] flex items-center justify-center">
         <EmptyState 
-          icon={FileText}
+          icon={Sheet}
           title="Reporting Engine Idle"
-          description="We need transactional details to generate periodic audits, download full PDF accounts, and export CSV statement balances!"
+          description="We need transactional details to generate period statements and export Excel financial reports!"
         />
       </div>
     )
@@ -237,7 +129,7 @@ export function Reports() {
     >
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Financial Statements</h1>
-        <p className="text-sm text-muted-foreground mt-1">Select periodic parameters, preview balances, and compile high-fidelity PDF/CSV exports.</p>
+        <p className="text-sm text-muted-foreground mt-1">Select periodic parameters, preview balances, and export Excel statements.</p>
       </div>
 
       {/* Selector Filters Grid */}
@@ -297,17 +189,10 @@ export function Reports() {
         {/* Quick action buttons */}
         <div className="flex items-end justify-start sm:justify-end gap-2 sm:col-span-3 md:col-span-1">
           <Button 
-            onClick={handleExportPDF} 
+            onClick={handleExportCSV} 
             className="rounded-xl flex items-center gap-1.5 w-full sm:w-auto font-bold bg-primary hover:bg-primary/95 text-white"
           >
-            <Download className="w-4 h-4" /> PDF Statement
-          </Button>
-          <Button 
-            onClick={handleExportCSV} 
-            variant="outline"
-            className="rounded-xl flex items-center gap-1.5 w-full sm:w-auto font-bold border-white/10 text-foreground"
-          >
-            <Download className="w-4 h-4" /> CSV
+            <Sheet className="w-4 h-4" /> Excel Statement
           </Button>
         </div>
       </GlassCard>
