@@ -3,11 +3,11 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/hooks/useTheme'
 import { useCurrency } from '@/context/CurrencyContext'
-import { User, LogOut, Activity, Download, RefreshCw, Trash2, Info } from 'lucide-react'
+import { User, LogOut, Activity, RefreshCw, Trash2, Info } from 'lucide-react'
 import { useProfile } from '@/hooks/useProfile'
 import { queryClient } from '@/lib/queryClient'
 import { syncOfflineTransactions } from '@/lib/offline-sync'
-import { useTransactions } from '@/hooks/useTransactions'
+
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import versionInfo from '../../public/version.json'
@@ -17,7 +17,7 @@ export function Settings() {
   const { mode, setTheme } = useTheme()
   const { currency, setCurrency } = useCurrency()
   const { profile, updateProfile } = useProfile()
-  const { transactions } = useTransactions()
+
 
   const handleCurrencyChange = async (newCurrency: string) => {
     setCurrency(newCurrency)
@@ -46,49 +46,7 @@ export function Settings() {
     }
   }
 
-  const handleExportJSON = () => {
-    if (transactions.length === 0) {
-      toast.error('No transactions available to export')
-      return
-    }
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(transactions, null, 2))
-    const downloadAnchor = document.createElement('a')
-    downloadAnchor.setAttribute('href', dataStr)
-    downloadAnchor.setAttribute('download', `money_tracker_backup_${new Date().toISOString().slice(0, 10)}.json`)
-    document.body.appendChild(downloadAnchor)
-    downloadAnchor.click()
-    downloadAnchor.remove()
-    toast.success('Backup JSON successfully generated')
-  }
 
-  const handleExportCSV = () => {
-    if (transactions.length === 0) {
-      toast.error('No transactions available to export')
-      return
-    }
-    const headers = ['ID', 'Type', 'Amount', 'Category', 'Description', 'Currency', 'Date']
-    const rows = transactions.map(t => [
-      t.id,
-      t.type,
-      t.amount,
-      t.category,
-      t.description || '',
-      t.currency,
-      t.created_at
-    ])
-    
-    const csvContent = 'data:text/csv;charset=utf-8,' 
-      + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n')
-      
-    const encodedUri = encodeURI(csvContent)
-    const downloadAnchor = document.createElement('a')
-    downloadAnchor.setAttribute('href', encodedUri)
-    downloadAnchor.setAttribute('download', `money_tracker_export_${new Date().toISOString().slice(0, 10)}.csv`)
-    document.body.appendChild(downloadAnchor)
-    downloadAnchor.click()
-    downloadAnchor.remove()
-    toast.success('CSV Report successfully generated')
-  }
 
   return (
     <motion.div 
@@ -183,26 +141,7 @@ export function Settings() {
               </div>
             </div>
 
-            {/* Data Export & Backup */}
-            <div className="space-y-4 pt-4 border-t border-white/5">
-              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Data Backups</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <button 
-                  onClick={handleExportJSON}
-                  className="flex items-center justify-center space-x-2 p-3 rounded-xl border border-white/10 hover:bg-white/5 text-sm font-medium transition-colors"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Backup JSON</span>
-                </button>
-                <button 
-                  onClick={handleExportCSV}
-                  className="flex items-center justify-center space-x-2 p-3 rounded-xl border border-white/10 hover:bg-white/5 text-sm font-medium transition-colors"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Export CSV</span>
-                </button>
-              </div>
-            </div>
+
 
             {/* Diagnostics Link (Mobile) */}
             <div className="pt-4 border-t border-white/5 md:hidden">
