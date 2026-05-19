@@ -4,9 +4,11 @@ import { useAuth } from '@/context/AuthContext'
 import { Transaction } from '@/types'
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAccounts } from '@/context/AccountContext'
 
 export function useTransactions() {
   const { user } = useAuth()
+  const { selectedAccountId } = useAccounts()
   const queryClient = useQueryClient()
 
   // Realtime subscription setup
@@ -44,29 +46,29 @@ export function useTransactions() {
   }, [user, queryClient])
 
   const query = useQuery({
-    queryKey: ['transactions', user?.id],
-    queryFn: () => transactionService.getTransactions(user!.id),
+    queryKey: ['transactions', user?.id, selectedAccountId],
+    queryFn: () => transactionService.getTransactions(user!.id, selectedAccountId),
     enabled: !!user,
   })
 
   const addMutation = useMutation({
     mutationFn: (newTx: Omit<Transaction, 'id' | 'created_at'>) => transactionService.addTransaction(newTx),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id, selectedAccountId] })
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string, updates: Partial<Transaction> }) => transactionService.updateTransaction(id, updates),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id, selectedAccountId] })
     },
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => transactionService.deleteTransaction(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id, selectedAccountId] })
     },
   })
 

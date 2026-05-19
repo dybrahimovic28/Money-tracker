@@ -2,6 +2,7 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/queryClient'
 import { AuthProvider } from '@/context/AuthContext'
+import { AccountProvider } from '@/context/AccountContext'
 import { CurrencyProvider } from '@/context/CurrencyContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { Button } from '@/components/ui/button'
@@ -53,12 +54,14 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <CurrencyProvider>
-            <ThemeProvider>
-              <NetworkStatus />
-              {children}
-            </ThemeProvider>
-          </CurrencyProvider>
+          <AccountProvider>
+            <CurrencyProvider>
+              <ThemeProvider>
+                <NetworkStatus />
+                {children}
+              </ThemeProvider>
+            </CurrencyProvider>
+          </AccountProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

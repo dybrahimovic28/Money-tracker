@@ -8,6 +8,7 @@ import { useBudgets } from '@/hooks/useBudgets'
 import { useSavingsGoals } from '@/hooks/useSavingsGoals'
 import { useCurrency } from '@/context/CurrencyContext'
 import { useAuth } from '@/context/AuthContext'
+import { useAccounts } from '@/context/AccountContext'
 import toast from 'react-hot-toast'
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader'
 import { format } from 'date-fns'
@@ -20,6 +21,7 @@ const BUDGET_CATEGORIES = [
 export function Budgets() {
   const { user } = useAuth()
   const { formatAmount } = useCurrency()
+  const { selectedAccountId } = useAccounts()
   const { budgetStats, saveBudget, deleteBudget, isLoading: budgetsLoading } = useBudgets()
   const { goals, saveGoal, updateGoal, deleteGoal, isLoading: goalsLoading } = useSavingsGoals()
 
@@ -57,6 +59,11 @@ export function Budgets() {
   const handleAddBudget = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
+    const accId = selectedAccountId !== 'all' ? selectedAccountId : ''
+    if (!accId) {
+      toast.error('Please select an account for this budget.')
+      return
+    }
     if (!budgetCategory) {
       toast.error('Please select a category')
       return
@@ -70,6 +77,7 @@ export function Budgets() {
       const now = new Date()
       await saveBudget({
         user_id: user.id,
+        account_id: accId,
         category: budgetCategory,
         amount_limit: Number(budgetLimit),
         month: now.getMonth() + 1, // 1-indexed month
@@ -88,6 +96,11 @@ export function Budgets() {
   const handleAddGoal = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
+    const accId = selectedAccountId !== 'all' ? selectedAccountId : ''
+    if (!accId) {
+      toast.error('Please select an account for this goal.')
+      return
+    }
     if (!goalName) {
       toast.error('Please enter a goal name')
       return
@@ -104,6 +117,7 @@ export function Budgets() {
     try {
       await saveGoal({
         user_id: user.id,
+        account_id: accId,
         name: goalName,
         target_amount: Number(goalTarget),
         current_amount: 0,
@@ -199,7 +213,13 @@ export function Budgets() {
             <h2 className="text-xl font-bold flex items-center">
               <Target className="w-5 h-5 mr-2 text-primary" /> Monthly Spending Limits
             </h2>
-            <Button onClick={() => setShowAddBudget(true)} className="rounded-xl flex items-center space-x-1 py-1.5 h-auto">
+            <Button onClick={() => {
+              if (selectedAccountId === 'all') {
+                toast.error('Select an account first.')
+                return
+              }
+              setShowAddBudget(true)
+            }} className="rounded-xl flex items-center space-x-1 py-1.5 h-auto">
               <Plus className="w-4 h-4" /> <span>Add Limit</span>
             </Button>
           </div>
@@ -339,7 +359,13 @@ export function Budgets() {
             <h2 className="text-xl font-bold flex items-center">
               <PiggyBank className="w-5 h-5 mr-2 text-emerald-500" /> Savings Targets
             </h2>
-            <Button onClick={() => setShowAddGoal(true)} className="rounded-xl border border-emerald-500/20 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10 flex items-center space-x-1 py-1.5 h-auto">
+            <Button onClick={() => {
+              if (selectedAccountId === 'all') {
+                toast.error('Select an account first.')
+                return
+              }
+              setShowAddGoal(true)
+            }} className="rounded-xl border border-emerald-500/20 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10 flex items-center space-x-1 py-1.5 h-auto">
               <Plus className="w-4 h-4" /> <span>New Goal</span>
             </Button>
           </div>

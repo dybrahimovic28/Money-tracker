@@ -10,6 +10,7 @@ import { SkeletonLoader } from '@/components/ui/SkeletonLoader'
 import { format } from 'date-fns'
 import { TransactionModal } from '@/components/ui/TransactionModal'
 import { Transaction } from '@/types'
+import { useAccounts } from '@/context/AccountContext'
 import toast from 'react-hot-toast'
 
 const ALL_CATEGORIES = [
@@ -21,6 +22,7 @@ const ALL_CATEGORIES = [
 export function Transactions() {
   const { formatAmount } = useCurrency()
   const { transactions, isLoading, deleteTransaction } = useTransactions()
+  const { selectedAccountId } = useAccounts()
   
   // Filtering & Sorting State
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
@@ -172,6 +174,18 @@ export function Transactions() {
             className="glass border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10 shrink-0 rounded-xl"
           >
             <Download className="h-4 w-4" />
+          </Button>
+          <Button 
+            onClick={() => {
+              if (selectedAccountId === 'all') {
+                toast.error('Select an account first.')
+                return
+              }
+              setIsModalOpen(true)
+            }}
+            className="rounded-xl shadow-lg shadow-primary/25 ml-2 whitespace-nowrap"
+          >
+            Add Transaction
           </Button>
         </div>
       </div>

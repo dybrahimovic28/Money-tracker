@@ -1,0 +1,84 @@
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { Account } from '@/types'
+import { accountService } from '@/services/accountService'
+import { useAuth } from './AuthContext'
+
+interface AccountContextType {
+  accounts: Account[]
+  selectedAccountId: string
+  setSelectedAccountId: (id: string) => void
+  isLoading: boolean
+  refreshAccounts: () => Promise<void>
+}
+
+const AccountContext = createContext<AccountContextType | undefined>(undefined)
+
+export function AccountProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('all')
+  const [isLoading, setIsLoading] = useState(true)
+
+  const refreshAccounts = async () => {
+    if (!user) {
+      setAccounts([])
+      setIsLoading(false)
+      return
+    }
+    
+    setIsLoading(true)
+    try {
+      const data = await accountService.getAccounts(user.id)
+      setAccounts(data)
+      
+      // If the selected account no longer exists, reset to 'all'
+      if (selectedAccountId !== 'all' && !data.find(a => a.id === selectedAccountId)) {
+        setSelectedAccountId('all')
+      }
+    } catch (error) {
+      console.error('Failed to load accounts:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    refreshAccounts()
+  }, [user])
+
+  // Optional: persist selectedAccountId to localStorage so it remembers user preference
+  useEffect(() => {
+    if (selectedAccountId) {
+      localStorage.setItem('selectedAccountId', selectedAccountId)
+    }
+  }, [selectedAccountId])
+
+  useEffect(() => {
+    const saved = localStorage.getItem('selectedAccountId')
+    if (saved) {
+      setSelectedAccountId(saved)
+    }
+  }, [])
+
+  return (
+    <AccountContext.Provider 
+      value={{ 
+        accounts, 
+        selectedAccountId, 
+        setSelectedAccountId, 
+        isLoading, 
+        refreshAccounts 
+      }}
+    >
+      {children}
+    </AccountContext.Provider>
+  )
+}
+
+export function useAccounts() {
+  const context = useContext(AccountContext)
+  if (context === undefined) {
+    throw new Error('useAccounts must be used within an AccountProvider')
+  }
+  return context
+}

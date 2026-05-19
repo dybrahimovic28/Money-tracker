@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, PieChart, Wallet, Settings, LogOut, ChevronLeft, ChevronRight, Target, Activity } from 'lucide-react'
+import { Home, PieChart, Wallet, Settings, LogOut, ChevronLeft, ChevronRight, Target, Activity, ArrowRightLeft, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
 import { useState } from 'react'
@@ -7,10 +7,12 @@ import { motion } from 'framer-motion'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
-  { name: 'Transactions', href: '/transactions', icon: Wallet },
+  { name: 'Accounts', href: '/accounts', icon: Wallet },
+  { name: 'Transactions', href: '/transactions', icon: ArrowRightLeft },
   { name: 'Budgets', href: '/budgets', icon: Target },
   { name: 'Reports', href: '/reports', icon: PieChart },
   { name: 'Analytics', href: '/analytics', icon: Activity },
+  { name: 'Debts', href: '/debts', icon: Users },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 

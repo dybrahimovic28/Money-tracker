@@ -3,29 +3,31 @@ import { budgetService } from '@/services/budgetService'
 import { useAuth } from '@/context/AuthContext'
 import { useTransactions } from './useTransactions'
 import { Budget } from '@/types'
+import { useAccounts } from '@/context/AccountContext'
 
 export function useBudgets() {
   const { user } = useAuth()
+  const { selectedAccountId } = useAccounts()
   const { transactions } = useTransactions()
   const queryClient = useQueryClient()
 
   const query = useQuery({
-    queryKey: ['budgets', user?.id],
-    queryFn: () => budgetService.getBudgets(user!.id),
+    queryKey: ['budgets', user?.id, selectedAccountId],
+    queryFn: () => budgetService.getBudgets(user!.id, selectedAccountId),
     enabled: !!user,
   })
 
   const saveMutation = useMutation({
     mutationFn: (budget: Omit<Budget, 'id' | 'created_at'>) => budgetService.saveBudget(budget),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['budgets', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['budgets', user?.id, selectedAccountId] })
     }
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => budgetService.deleteBudget(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['budgets', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['budgets', user?.id, selectedAccountId] })
     }
   })
 

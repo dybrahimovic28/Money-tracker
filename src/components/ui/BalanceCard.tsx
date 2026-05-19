@@ -2,20 +2,24 @@ import { Eye, EyeOff, TrendingUp, TrendingDown } from 'lucide-react'
 import { useState } from 'react'
 import CountUp from 'react-countup'
 import { GlassCard } from './GlassCard'
-import { useCurrency } from '@/context/CurrencyContext'
 
 interface BalanceCardProps {
   balance: number
   monthlyGrowth?: number
+  currencyCode?: string
+  title?: string
 }
 
 const SafeCountUp = (CountUp as any).default || CountUp
 
-export function BalanceCard({ balance, monthlyGrowth = 0 }: BalanceCardProps) {
+export function BalanceCard({ balance, monthlyGrowth = 0, currencyCode, title = "Total Balance" }: BalanceCardProps) {
   const [showBalance, setShowBalance] = useState(true)
-  const { formatAmount } = useCurrency()
 
   const isPositive = monthlyGrowth >= 0
+
+  const formatWithCurrency = (val: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode || 'USD' }).format(val)
+  }
 
   return (
     <GlassCard intensity="high" className="relative overflow-hidden text-white border-none glass-panel">
@@ -25,7 +29,7 @@ export function BalanceCard({ balance, monthlyGrowth = 0 }: BalanceCardProps) {
 
       <div className="relative z-10 p-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-medium text-white/80 uppercase tracking-wider">Total Balance</h2>
+          <h2 className="text-sm font-medium text-white/80 uppercase tracking-wider">{title}</h2>
           <button
             onClick={() => setShowBalance(!showBalance)}
             className="p-2 rounded-full hover:bg-white/10 transition-colors text-white/80"
@@ -41,7 +45,7 @@ export function BalanceCard({ balance, monthlyGrowth = 0 }: BalanceCardProps) {
                 end={balance}
                 duration={1.5}
                 decimals={2}
-                formattingFn={(val: number) => formatAmount(val)}
+                formattingFn={formatWithCurrency}
               />
             ) : (
               '••••••••'

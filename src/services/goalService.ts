@@ -4,12 +4,18 @@ import { SavingsGoal } from '@/types'
 const GOALS_CACHE_KEY = 'money-tracker-savings-goals-cache'
 
 export const goalService = {
-  async getGoals(userId: string): Promise<SavingsGoal[]> {
+  async getGoals(userId: string, accountId: string | null = null): Promise<SavingsGoal[]> {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('savings_goals')
         .select('*')
         .eq('user_id', userId)
+
+      if (accountId && accountId !== 'all') {
+        query = query.eq('account_id', accountId)
+      }
+
+      const { data, error } = await query
       
       if (error) throw error
       

@@ -14,6 +14,7 @@ import { useSavingsGoals } from '@/hooks/useSavingsGoals'
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader'
 import { format } from 'date-fns'
 import { useState } from 'react'
+import { useAccounts } from '@/context/AccountContext'
 import { TransactionModal } from '@/components/ui/TransactionModal'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -21,9 +22,10 @@ import toast from 'react-hot-toast'
 export function Dashboard() {
   const navigate = useNavigate()
   const { formatAmount } = useCurrency()
-  const { stats, chartData, isLoading, transactions } = useDashboardStats()
+  const { statsByCurrency, chartData, isLoading, transactions } = useDashboardStats()
   const { budgetStats } = useBudgets()
   const { totalSavingsCurrent } = useSavingsGoals()
+  const { selectedAccountId } = useAccounts()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalDefaultType, setModalDefaultType] = useState<'income' | 'expense'>('expense')
@@ -42,10 +44,13 @@ export function Dashboard() {
   }
 
   const recentTransactions = transactions.slice(0, 5)
+  const isAllAccounts = selectedAccountId === 'all'
+  
+  // Single Account Stats fallback
+  const firstCurrencyStats = Object.values(statsByCurrency)[0] || { totalIncome: 0, totalExpense: 0, balance: 0, monthlyGrowth: 0 }
+  const singleStats = isAllAccounts ? null : firstCurrencyStats
 
-  // Calculate generic health score dynamically:
-  // If savings rate > 20%, excellent (85-100). If income is 0, defaults to 50.
-  const dynamicSavingsRate = stats ? (stats.totalIncome > 0 ? ((stats.totalIncome - stats.totalExpense) / stats.totalIncome) * 100 : 0) : 0
+  const dynamicSavingsRate = singleStats ? (singleStats.totalIncome > 0 ? ((singleStats.totalIncome - singleStats.totalExpense) / singleStats.totalIncome) * 100 : 0) : 0
   const computedHealthScore = Math.min(Math.max(50 + Math.round(dynamicSavingsRate), 10), 100)
 
   const handleExportQuick = () => {
@@ -66,34 +71,79 @@ export function Dashboard() {
         
         {/* Hero Section */}
         <div className="lg:col-span-8 space-y-6">
-          <BalanceCard balance={stats?.balance || 0} monthlyGrowth={stats?.monthlyGrowth || 0} />
-
-          {/* Three Summary Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <StatCard 
-              title="Total Income" 
-              amount={stats?.totalIncome || 0} 
-              icon={ArrowUpToLine} 
-              iconClassName="text-emerald-500 bg-emerald-500/10" 
-            />
-            <StatCard 
-              title="Total Expenses" 
-              amount={stats?.totalExpense || 0} 
-              icon={ArrowDownToLine} 
-              iconClassName="text-red-500 bg-red-500/10" 
-            />
-            <StatCard 
-              title="Savings Deposited" 
-              amount={totalSavingsCurrent} 
-              icon={Wallet} 
-              iconClassName="text-blue-500 bg-blue-500/10" 
-            />
-          </div>
+          {isAllAccounts ? (
+            <div className="space-y-4">
+              {Object.entries(statsByCurrency).length === 0 && (
+                <BalanceCard balance={0} monthlyGrowth={0} title="Total Balance" />
+              )}
+              {Object.entries(statsByCurrency).map(([currency, stat]) => (
+                <div key={currency} className="mb-4">
+                  <BalanceCard 
+                    balance={stat.balance} 
+                    monthlyGrowth={stat.monthlyGrowth} 
+                    currencyCode={currency}
+                    title={`${currency} Balance`}
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                    <StatCard 
+                      title="Total Income" 
+                      amount={stat.totalIncome} 
+                      icon={ArrowUpToLine} 
+                      iconClassName="text-emerald-500 bg-emerald-500/10" 
+                    />
+                    <StatCard 
+                      title="Total Expenses" 
+                      amount={stat.totalExpense} 
+                      icon={ArrowDownToLine} 
+                      iconClassName="text-red-500 bg-red-500/10" 
+                    />
+                    <StatCard 
+                      title="Savings Deposited" 
+                      amount={totalSavingsCurrent} 
+                      icon={Wallet} 
+                      iconClassName="text-blue-500 bg-blue-500/10" 
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <BalanceCard 
+                balance={singleStats?.balance || 0} 
+                monthlyGrowth={singleStats?.monthlyGrowth || 0} 
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <StatCard 
+                  title="Total Income" 
+                  amount={singleStats?.totalIncome || 0} 
+                  icon={ArrowUpToLine} 
+                  iconClassName="text-emerald-500 bg-emerald-500/10" 
+                />
+                <StatCard 
+                  title="Total Expenses" 
+                  amount={singleStats?.totalExpense || 0} 
+                  icon={ArrowDownToLine} 
+                  iconClassName="text-red-500 bg-red-500/10" 
+                />
+                <StatCard 
+                  title="Savings Deposited" 
+                  amount={totalSavingsCurrent} 
+                  icon={Wallet} 
+                  iconClassName="text-blue-500 bg-blue-500/10" 
+                />
+              </div>
+            </>
+          )}
 
           {/* Quick Actions grid */}
           <div className="grid grid-cols-4 gap-2 md:gap-4">
             <QuickActionButton 
               onClick={() => {
+                if (isAllAccounts) {
+                  toast.error('Select an account first.')
+                  return
+                }
                 setModalDefaultType('income')
                 setIsModalOpen(true)
               }} 
@@ -103,6 +153,10 @@ export function Dashboard() {
             />
             <QuickActionButton 
               onClick={() => {
+                if (isAllAccounts) {
+                  toast.error('Select an account first.')
+                  return
+                }
                 setModalDefaultType('expense')
                 setIsModalOpen(true)
               }} 

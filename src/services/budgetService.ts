@@ -4,12 +4,18 @@ import { Budget } from '@/types'
 const BUDGETS_CACHE_KEY = 'money-tracker-budgets-cache'
 
 export const budgetService = {
-  async getBudgets(userId: string): Promise<Budget[]> {
+  async getBudgets(userId: string, accountId: string | null = null): Promise<Budget[]> {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('budgets')
         .select('*')
         .eq('user_id', userId)
+      
+      if (accountId && accountId !== 'all') {
+        query = query.eq('account_id', accountId)
+      }
+
+      const { data, error } = await query
       
       if (error) throw error
       
@@ -50,6 +56,7 @@ export const budgetService = {
         .upsert([
           {
             user_id: budget.user_id,
+            account_id: budget.account_id,
             category: budget.category,
             amount_limit: budget.amount_limit,
             month: budget.month,

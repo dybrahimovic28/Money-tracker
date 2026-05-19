@@ -1,14 +1,15 @@
 import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '../ui/ThemeToggle'
 import { NotificationBell } from '../ui/NotificationBell'
-import { CurrencyBadge } from '../ui/CurrencyBadge'
+import { AccountSwitcher } from '../ui/AccountSwitcher'
 import { format } from 'date-fns'
+import { useNavigate } from 'react-router-dom'
 
 export function Header() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const today = format(new Date(), 'EEEE, d MMMM')
   
-  // Extract name from email or use full_name if available
   const getGreetingName = () => {
     if (!user) return 'User'
     const emailName = user.email?.split('@')[0] || 'User'
@@ -33,7 +34,7 @@ export function Header() {
 
       <div className="flex items-center space-x-4">
         <div className="hidden md:flex items-center space-x-3">
-          <CurrencyBadge />
+          <AccountSwitcher onAddAccount={() => navigate('/accounts')} />
           <ThemeToggle />
           <NotificationBell count={2} />
         </div>

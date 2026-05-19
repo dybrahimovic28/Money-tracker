@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Calendar, FileText } from 'lucide-react'
+import { X, Calendar, FileText, AlertCircle } from 'lucide-react'
 import { GlassCard } from './GlassCard'
 import { Input } from './input'
 import { Button } from './button'
 import { useTransactions } from '@/hooks/useTransactions'
 import { useAuth } from '@/context/AuthContext'
+import { useAccounts } from '@/context/AccountContext'
 import { Transaction } from '@/types'
-import { useCurrency } from '@/context/CurrencyContext'
 import toast from 'react-hot-toast'
 
 interface TransactionModalProps {
@@ -23,7 +23,7 @@ const EXPENSE_CATEGORIES = ['Food', 'Transport', 'Bills', 'Shopping', 'Rent', 'H
 export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultType }: TransactionModalProps) {
   const { user } = useAuth()
   const { addTransaction, updateTransaction, isAdding } = useTransactions()
-  const { currency } = useCurrency()
+  const { accounts, selectedAccountId } = useAccounts()
 
   const [type, setType] = useState<'income' | 'expense'>('expense')
   const [amount, setAmount] = useState('')
@@ -31,6 +31,7 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
   const [description, setDescription] = useState('')
   const [notes, setNotes] = useState('')
   const [createdAt, setCreatedAt] = useState('')
+  const [accountId, setAccountId] = useState('')
 
   useEffect(() => {
     if (isOpen) {
@@ -40,6 +41,7 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
         setCategory(transactionToEdit.category)
         setDescription(transactionToEdit.description || '')
         setNotes(transactionToEdit.notes || '')
+        setAccountId(transactionToEdit.account_id || selectedAccountId === 'all' ? '' : selectedAccountId)
         
         // Format ISO date to yyyy-MM-ddThh:mm for datetime-local input
         const date = new Date(transactionToEdit.created_at)
@@ -52,6 +54,7 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
         setCategory('')
         setDescription('')
         setNotes('')
+        setAccountId(selectedAccountId === 'all' ? '' : selectedAccountId)
         
         // Default to current local time in yyyy-MM-ddThh:mm format
         const now = new Date()
@@ -60,7 +63,7 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
         setCreatedAt(localISOTime)
       }
     }
-  }, [transactionToEdit, isOpen, defaultType])
+  }, [transactionToEdit, isOpen, defaultType, selectedAccountId])
 
   // Reset category if type changes to prevent invalid categories
   useEffect(() => {
@@ -72,6 +75,10 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
+    if (!accountId) {
+      toast.error('Please select an account before creating records.')
+      return
+    }
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
       toast.error('Please enter a valid positive amount')
       return
@@ -81,8 +88,12 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
       return
     }
 
+    const account = accounts.find(a => a.id === accountId)
+    const currency = account ? account.currency_code : 'USD'
+
     const payload = {
       user_id: user.id,
+      account_id: accountId,
       type,
       amount: Number(amount),
       category,
@@ -119,7 +130,7 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-md"
+            className="w-full max-w-md max-h-screen overflow-y-auto"
           >
             <GlassCard intensity="high" className="p-6 border border-white/10 shadow-2xl relative">
               <div className="flex items-center justify-between mb-6">
@@ -132,6 +143,30 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                
+                {selectedAccountId === 'all' && (
+                  <div className="bg-orange-500/10 border border-orange-500/20 text-orange-400 p-3 rounded-lg text-sm mb-4">
+                    <AlertCircle className="inline h-4 w-4 mr-2 -mt-0.5" />
+                    Please select an account before creating records.
+                  </div>
+                )}
+
+                {/* Account Selection */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-muted-foreground">Account</label>
+                  <select 
+                    required
+                    value={accountId}
+                    onChange={(e) => setAccountId(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-background/50 border border-white/10 text-foreground focus:ring-1 focus:ring-primary outline-none"
+                  >
+                    <option value="" disabled>Select Account</option>
+                    {accounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency_code})</option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Transaction Type Toggle */}
                 <div className="flex rounded-xl overflow-hidden border border-white/10 p-1 bg-card/50 glass">
                   <button
@@ -154,7 +189,7 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-muted-foreground">Amount</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-3 text-muted-foreground font-medium">{currency === 'USD' ? '$' : currency}</span>
+                    <span className="absolute left-3 top-3 text-muted-foreground font-medium">{(accounts.find(a => a.id === accountId)?.currency_code || 'USD') === 'USD' ? '$' : (accounts.find(a => a.id === accountId)?.currency_code || 'USD')}</span>
                     <Input 
                       type="number" 
                       step="0.01"

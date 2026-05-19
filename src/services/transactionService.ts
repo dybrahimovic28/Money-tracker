@@ -3,12 +3,18 @@ import { Transaction } from '@/types'
 import { saveTransactionOffline } from '@/lib/offline-sync'
 
 export const transactionService = {
-  async getTransactions(userId: string) {
-    const { data, error } = await supabase
+  async getTransactions(userId: string, accountId: string | null = null) {
+    let query = supabase
       .from('transactions')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
+    
+    if (accountId && accountId !== 'all') {
+      query = query.eq('account_id', accountId)
+    }
+
+    const { data, error } = await query
     
     if (error) throw error
     return data as Transaction[]
