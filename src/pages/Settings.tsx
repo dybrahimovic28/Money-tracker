@@ -3,12 +3,10 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/hooks/useTheme'
 import { useCurrency } from '@/context/CurrencyContext'
-import { User, LogOut, Activity, RefreshCw, Trash2, Info } from 'lucide-react'
+import { LogOut, RefreshCw, Trash2, Info } from 'lucide-react'
 import { useProfile } from '@/hooks/useProfile'
 import { queryClient } from '@/lib/queryClient'
 import { syncOfflineTransactions } from '@/lib/offline-sync'
-
-import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import versionInfo from '../../public/version.json'
 
@@ -56,21 +54,9 @@ export function Settings() {
     >
       <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Settings Navigation (Desktop) */}
-        <div className="hidden md:block col-span-1 space-y-1">
-          <button className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium text-left">
-            <User className="h-5 w-5" />
-            <span>Profile & System</span>
-          </button>
-          <Link to="/diagnostics" className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-white/5 text-muted-foreground hover:text-foreground font-medium transition-colors">
-            <Activity className="h-5 w-5" />
-            <span>Diagnostics</span>
-          </Link>
-        </div>
-
+      <div className="grid grid-cols-1 gap-6">
         {/* Settings Content */}
-        <div className="col-span-1 md:col-span-2 space-y-6">
+        <div className="space-y-6">
           <GlassCard intensity="low" className="p-6 space-y-6">
             <div className="flex items-center space-x-4">
               <div className="h-20 w-20 rounded-full border-2 border-primary/20 bg-muted overflow-hidden">
@@ -142,17 +128,6 @@ export function Settings() {
             </div>
 
 
-
-            {/* Diagnostics Link (Mobile) */}
-            <div className="pt-4 border-t border-white/5 md:hidden">
-              <Link 
-                to="/diagnostics"
-                className="flex items-center space-x-2 text-primary font-medium hover:underline text-sm"
-              >
-                <Activity className="h-5 w-5" />
-                <span>Open System Diagnostics</span>
-              </Link>
-            </div>
 
             <div className="pt-6 border-t border-white/5">
               <button 

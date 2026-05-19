@@ -8,7 +8,7 @@ import { Budgets } from './pages/Budgets'
 import { Reports } from './pages/Reports'
 import { Analytics } from './pages/Analytics'
 import { Settings } from './pages/Settings'
-import { Diagnostics } from './pages/Diagnostics'
+
 import { NotFound } from './pages/NotFound'
 
 function App() {
@@ -29,7 +29,7 @@ function App() {
         <Route path="reports" element={<Reports />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="settings" element={<Settings />} />
-        <Route path="diagnostics" element={<Diagnostics />} />
+
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
