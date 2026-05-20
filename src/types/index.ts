@@ -6,6 +6,7 @@ export interface Profile {
   full_name: string | null
   preferred_currency: string
   role: Role
+  target_monthly_income?: number
   created_at: string
 }
 

@@ -9,11 +9,14 @@ export function HealthScoreCard({ score }: HealthScoreCardProps) {
   let status = 'Excellent'
   let color = 'text-emerald-500'
 
-  if (score < 50) {
-    status = 'Needs Attention'
+  if (score <= 25) {
+    status = 'Critical'
     color = 'text-red-500'
-  } else if (score < 80) {
-    status = 'Good'
+  } else if (score <= 50) {
+    status = 'Needs Attention'
+    color = 'text-orange-500'
+  } else if (score <= 75) {
+    status = 'Stable'
     color = 'text-blue-500'
   }
 

@@ -106,6 +106,30 @@ export function Settings() {
               </select>
             </div>
 
+            <div className="space-y-4 pt-4 border-t border-white/5">
+              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Financial Target</h4>
+              <div>
+                <label className="text-sm block mb-1">Target Monthly Income</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-muted-foreground font-medium">{currency === 'USD' ? '$' : currency}</span>
+                  <input 
+                    type="number"
+                    value={profile?.target_monthly_income || localStorage.getItem('target_monthly_income') || ''}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      localStorage.setItem('target_monthly_income', val)
+                      if (profile) {
+                        updateProfile({ target_monthly_income: Number(val) })
+                      }
+                    }}
+                    className="w-full p-3 pl-12 rounded-xl bg-background border border-white/10 text-foreground focus:ring-1 focus:ring-primary outline-none"
+                    placeholder="e.g. 5000"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Used to calculate your monthly progress on the dashboard.</p>
+              </div>
+            </div>
+
             {/* System Actions */}
             <div className="space-y-4 pt-4 border-t border-white/5">
               <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">System Operations</h4>

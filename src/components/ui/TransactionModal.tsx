@@ -91,6 +91,11 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
     const account = accounts.find(a => a.id === accountId)
     const currency = account ? account.currency_code : 'USD'
 
+    if (type === 'expense' && account && Number(amount) > account.current_balance) {
+      toast.error('Insufficient funds. Expense exceeds available balance.')
+      return
+    }
+
     const payload = {
       user_id: user.id,
       account_id: accountId,

@@ -7,7 +7,7 @@ import { transactionService } from '@/services/transactionService'
 
 export function useDebts() {
   const { user } = useAuth()
-  const { selectedAccountId } = useAccounts()
+  const { selectedAccountId, accounts } = useAccounts()
   const queryClient = useQueryClient()
 
   const query = useQuery({
@@ -26,6 +26,18 @@ export function useDebts() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Debt> }) => {
       const oldDebt = query.data?.find(d => d.id === id)
+
+      // Prevent negative balance
+      if (oldDebt && oldDebt.status === 'Pending' && updates.status === 'Paid') {
+        const accountId = oldDebt.account_id || selectedAccountId
+        if (accountId) {
+          const account = accounts.find(a => a.id === accountId)
+          if (account && oldDebt.amount > account.current_balance) {
+            throw new Error('Insufficient funds. Expense exceeds available balance.')
+          }
+        }
+      }
+
       const updatedDebt = await debtService.updateDebt(id, user!.id, updates)
 
       // Automatic transaction generation on settlement (Debt Settlement Behavior)

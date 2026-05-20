@@ -18,6 +18,7 @@ import { useAccounts } from '@/context/AccountContext'
 import { TransactionModal } from '@/components/ui/TransactionModal'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useProfile } from '@/hooks/useProfile'
 
 export function Dashboard() {
   const navigate = useNavigate()
@@ -26,6 +27,7 @@ export function Dashboard() {
   const { budgetStats } = useBudgets()
   const { totalSavingsCurrent } = useSavingsGoals()
   const { selectedAccountId } = useAccounts()
+  const { profile } = useProfile()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalDefaultType, setModalDefaultType] = useState<'income' | 'expense'>('expense')
@@ -47,11 +49,24 @@ export function Dashboard() {
   const isAllAccounts = selectedAccountId === 'all'
   
   // Single Account Stats fallback
-  const firstCurrencyStats = Object.values(statsByCurrency)[0] || { totalIncome: 0, totalExpense: 0, balance: 0, monthlyGrowth: 0 }
+  const firstCurrencyStats = Object.values(statsByCurrency)[0] || { totalIncome: 0, totalExpense: 0, balance: 0, monthlyGrowth: 0, currentMonthIncome: 0, currentMonthExpense: 0 }
   const singleStats = isAllAccounts ? null : firstCurrencyStats
 
-  const dynamicSavingsRate = singleStats ? (singleStats.totalIncome > 0 ? ((singleStats.totalIncome - singleStats.totalExpense) / singleStats.totalIncome) * 100 : 0) : 0
-  const computedHealthScore = Math.min(Math.max(50 + Math.round(dynamicSavingsRate), 10), 100)
+  const money_left = singleStats ? singleStats.balance : 0
+  const expenses = singleStats ? singleStats.totalExpense : 0
+  const income = singleStats ? singleStats.totalIncome : 0
+  
+  let health = 0
+  if (income === 0) {
+    health = 0
+  } else {
+    health = (money_left / income) * 100
+  }
+  const computedHealthScore = Math.max(0, Math.min(Math.round(health), 100))
+
+  const targetMonthlyIncome = profile?.target_monthly_income || Number(localStorage.getItem('target_monthly_income')) || 0
+  const currentIncome = singleStats?.currentMonthIncome || 0
+  const targetProgress = targetMonthlyIncome > 0 ? Math.min(Math.round((currentIncome / targetMonthlyIncome) * 100), 100) : 0
 
   const handleExportQuick = () => {
     if (transactions.length === 0) {
@@ -216,6 +231,24 @@ export function Dashboard() {
         {/* Sidebar Widgets */}
         <div className="lg:col-span-4 space-y-6">
           <HealthScoreCard score={computedHealthScore} />
+
+          {/* Monthly Target Progress */}
+          <GlassCard intensity="low" className="p-6 border border-white/5 shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-foreground text-sm">Monthly Target Progress</h3>
+              <span className="text-xs font-semibold text-primary">{targetProgress}%</span>
+            </div>
+            <div className="w-full bg-white/10 rounded-full h-2 mb-2">
+              <div 
+                className="bg-primary h-2 rounded-full transition-all"
+                style={{ width: `${targetProgress}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground flex justify-between">
+              <span>{formatAmount(currentIncome)}</span>
+              <span>{targetMonthlyIncome > 0 ? formatAmount(targetMonthlyIncome) : 'Set Target in Settings'}</span>
+            </p>
+          </GlassCard>
           
           {/* Dynamic Budgets Overview */}
           <GlassCard intensity="low" className="p-6 border border-white/5 shadow-xl">
