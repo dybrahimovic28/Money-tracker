@@ -103,19 +103,22 @@ export function Dashboard() {
                       title="Total Income" 
                       amount={stat.totalIncome} 
                       icon={ArrowUpToLine} 
-                      iconClassName="text-emerald-500 bg-emerald-500/10" 
+                      iconClassName="text-emerald-500 bg-emerald-500/10"
+                      currencyCode={currency}
                     />
                     <StatCard 
                       title="Total Expenses" 
                       amount={stat.totalExpense} 
                       icon={ArrowDownToLine} 
-                      iconClassName="text-red-500 bg-red-500/10" 
+                      iconClassName="text-red-500 bg-red-500/10"
+                      currencyCode={currency}
                     />
                     <StatCard 
                       title="Savings Deposited" 
                       amount={totalSavingsCurrent} 
                       icon={Wallet} 
-                      iconClassName="text-blue-500 bg-blue-500/10" 
+                      iconClassName="text-blue-500 bg-blue-500/10"
+                      currencyCode={currency}
                     />
                   </div>
                 </div>

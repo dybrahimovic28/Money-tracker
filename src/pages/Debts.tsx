@@ -12,8 +12,11 @@ import toast from 'react-hot-toast'
 import { DebtType } from '@/types'
 import { format } from 'date-fns'
 
+import { useCurrency } from '@/context/CurrencyContext'
+
 export function Debts() {
   const { user } = useAuth()
+  const { formatAmount } = useCurrency()
   const { selectedAccountId, accounts } = useAccounts()
   const { debts, totalDebt, totalCredit, netPosition, overdueCount, saveDebt, updateDebt, deleteDebt } = useDebts()
   
@@ -165,7 +168,7 @@ export function Debts() {
 
               <div className="flex items-center justify-between sm:justify-end sm:space-x-6">
                 <div className="text-right">
-                  <span className="font-bold block">{new Intl.NumberFormat('en-US', { style: 'currency', currency: debt.currency }).format(debt.amount)}</span>
+                  <span className="font-bold block">{formatAmount(debt.amount)}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
                     debt.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-500' :
                     debt.status === 'Overdue' ? 'bg-red-500/20 text-red-500' :

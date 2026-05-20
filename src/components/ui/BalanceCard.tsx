@@ -2,6 +2,7 @@ import { Eye, EyeOff, TrendingUp, TrendingDown } from 'lucide-react'
 import { useState } from 'react'
 import CountUp from 'react-countup'
 import { GlassCard } from './GlassCard'
+import { useCurrency } from '@/context/CurrencyContext'
 
 interface BalanceCardProps {
   balance: number
@@ -17,8 +18,10 @@ export function BalanceCard({ balance, monthlyGrowth = 0, currencyCode, title = 
 
   const isPositive = monthlyGrowth >= 0
 
+  const { formatCurrencyByAccount } = useCurrency()
+
   const formatWithCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode || 'USD' }).format(val)
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode || formatCurrencyByAccount() }).format(val)
   }
 
   return (

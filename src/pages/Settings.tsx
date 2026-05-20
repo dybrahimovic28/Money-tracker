@@ -13,7 +13,7 @@ import versionInfo from '../../public/version.json'
 export function Settings() {
   const { user, signOut } = useAuth()
   const { mode, setTheme } = useTheme()
-  const { currency, setCurrency } = useCurrency()
+  const { currency, setCurrency, formatCurrencyByAccount } = useCurrency()
   const { profile, updateProfile } = useProfile()
 
 
@@ -111,7 +111,9 @@ export function Settings() {
               <div>
                 <label className="text-sm block mb-1">Target Monthly Income</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-3 text-muted-foreground font-medium">{currency === 'USD' ? '$' : currency}</span>
+                  <span className="absolute left-3 top-3 text-muted-foreground font-medium">
+                    {formatCurrencyByAccount() === 'USD' ? '$' : formatCurrencyByAccount()}
+                  </span>
                   <input 
                     type="number"
                     value={profile?.target_monthly_income || localStorage.getItem('target_monthly_income') || ''}

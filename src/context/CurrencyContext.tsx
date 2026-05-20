@@ -1,22 +1,26 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { formatCurrency } from '@/lib/utils'
 import { useAuth } from './AuthContext'
+import { useAccounts } from './AccountContext'
 import { supabase } from '@/lib/supabase'
 
 interface CurrencyContextType {
   currency: string
   setCurrency: (code: string) => void
-  formatAmount: (amount: number) => string
+  formatAmount: (amount: number, accountId?: string | null) => string
+  formatCurrencyByAccount: (accountId?: string | null) => string
 }
 
 const CurrencyContext = createContext<CurrencyContextType>({
   currency: 'USD',
   setCurrency: () => {},
   formatAmount: (amount) => formatCurrency(amount, 'USD'),
+  formatCurrencyByAccount: () => 'USD',
 })
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
+  const { accounts, selectedAccountId } = useAccounts()
   const [currency, setCurrencyState] = useState('USD')
 
   useEffect(() => {
@@ -46,12 +50,24 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const formatAmount = (amount: number) => {
-    return formatCurrency(amount, currency)
+  const formatCurrencyByAccount = (accountId: string | null = null) => {
+    if (accountId && accountId !== 'all') {
+      const activeAccount = accounts.find(a => a.id === accountId)
+      if (activeAccount) return activeAccount.currency_code
+    }
+    if (selectedAccountId !== 'all') {
+      const activeAccount = accounts.find(a => a.id === selectedAccountId)
+      if (activeAccount) return activeAccount.currency_code
+    }
+    return currency
+  }
+
+  const formatAmount = (amount: number, accountId: string | null = null) => {
+    return formatCurrency(amount, formatCurrencyByAccount(accountId))
   }
 
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, formatAmount }}>
+    <CurrencyContext.Provider value={{ currency, setCurrency, formatAmount, formatCurrencyByAccount }}>
       {children}
     </CurrencyContext.Provider>
   )
