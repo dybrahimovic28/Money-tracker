@@ -91,9 +91,19 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
     const account = accounts.find(a => a.id === accountId)
     const currency = account ? account.currency_code : 'USD'
 
-    if (type === 'expense' && account && Number(amount) > account.current_balance) {
-      toast.error('Insufficient funds. Expense exceeds available balance.')
-      return
+    const expenseAmount = Number(amount)
+    const currentBalance = Number(account?.current_balance || 0)
+
+    if (type === 'expense' && account) {
+      let availableBalance = currentBalance
+      if (transactionToEdit && transactionToEdit.type === 'expense' && transactionToEdit.account_id === accountId) {
+        availableBalance += Number(transactionToEdit.amount)
+      }
+
+      if (expenseAmount > availableBalance) {
+        toast.error('Insufficient funds. Expense exceeds available balance.')
+        return
+      }
     }
 
     const payload = {
@@ -163,7 +173,7 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
                     required
                     value={accountId}
                     onChange={(e) => setAccountId(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-background/50 border border-white/10 text-foreground focus:ring-1 focus:ring-primary outline-none"
+                    className="w-full p-3 rounded-xl bg-background/50 border border-white/10 text-foreground focus:ring-1 focus:ring-primary outline-none [&>option]:bg-white [&>option]:text-black"
                   >
                     <option value="" disabled>Select Account</option>
                     {accounts.map(acc => (
@@ -214,7 +224,7 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
                     required
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-background/50 border border-white/10 text-foreground focus:ring-1 focus:ring-primary outline-none"
+                    className="w-full p-3 rounded-xl bg-background/50 border border-white/10 text-foreground focus:ring-1 focus:ring-primary outline-none [&>option]:bg-white [&>option]:text-black"
                   >
                     <option value="" disabled>Select category</option>
                     {type === 'income' ? (
