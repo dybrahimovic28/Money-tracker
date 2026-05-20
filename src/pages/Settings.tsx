@@ -133,46 +133,6 @@ export function Settings() {
               </div>
             </div>
 
-            {/* Data Management Section */}
-            <div className="space-y-4 pt-4 border-t border-white/5">
-              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Data Management</h4>
-              <p className="text-xs text-muted-foreground mb-4">Manage your data securely. These actions range from soft resets to complete account deletion.</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button 
-                  onClick={() => handleOpenReset('Monthly')}
-                  className="flex flex-col items-start p-4 rounded-xl border border-blue-400/20 hover:bg-blue-400/5 transition-colors text-left"
-                >
-                  <span className="font-semibold text-blue-400">Monthly Reset</span>
-                  <span className="text-xs text-muted-foreground mt-1">Archive current month transactions and reset dashboard.</span>
-                </button>
-
-                <button 
-                  onClick={() => handleOpenReset('Transactions')}
-                  className="flex flex-col items-start p-4 rounded-xl border border-orange-400/20 hover:bg-orange-400/5 transition-colors text-left"
-                >
-                  <span className="font-semibold text-orange-400">Reset Transactions</span>
-                  <span className="text-xs text-muted-foreground mt-1">Permanently delete all income and expense records.</span>
-                </button>
-
-                <button 
-                  onClick={() => handleOpenReset('Financial')}
-                  className="flex flex-col items-start p-4 rounded-xl border border-red-400/20 hover:bg-red-400/5 transition-colors text-left"
-                >
-                  <span className="font-semibold text-red-400">Full Financial Reset</span>
-                  <span className="text-xs text-muted-foreground mt-1">Delete all transactions, budgets, goals, and debts.</span>
-                </button>
-
-                <button 
-                  onClick={() => handleOpenReset('Factory')}
-                  className="flex flex-col items-start p-4 rounded-xl border border-rose-600/20 hover:bg-rose-600/5 transition-colors text-left"
-                >
-                  <span className="font-semibold text-rose-600">Factory Reset</span>
-                  <span className="text-xs text-muted-foreground mt-1">Delete absolutely everything and return to onboarding.</span>
-                </button>
-              </div>
-            </div>
-
             <div className="space-y-4 pt-4 border-t border-white/5">
               <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Theme Mode</h4>
               <div className="grid grid-cols-3 gap-4">
@@ -258,7 +218,45 @@ export function Settings() {
               </div>
             </div>
 
+            {/* Data Management Section */}
+            <div className="space-y-4 pt-4 border-t border-white/5">
+              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Data Management</h4>
+              <p className="text-xs text-muted-foreground mb-4">Manage your data securely. These actions range from soft resets to complete account deletion.</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button 
+                  onClick={() => handleOpenReset('Monthly')}
+                  className="flex flex-col items-start p-4 rounded-xl border border-blue-400/20 hover:bg-blue-400/5 transition-colors text-left"
+                >
+                  <span className="font-semibold text-blue-400">Monthly Reset</span>
+                  <span className="text-xs text-muted-foreground mt-1">Archive current month transactions and reset dashboard.</span>
+                </button>
 
+                <button 
+                  onClick={() => handleOpenReset('Transactions')}
+                  className="flex flex-col items-start p-4 rounded-xl border border-orange-400/20 hover:bg-orange-400/5 transition-colors text-left"
+                >
+                  <span className="font-semibold text-orange-400">Reset Transactions</span>
+                  <span className="text-xs text-muted-foreground mt-1">Permanently delete all income and expense records.</span>
+                </button>
+
+                <button 
+                  onClick={() => handleOpenReset('Financial')}
+                  className="flex flex-col items-start p-4 rounded-xl border border-red-400/20 hover:bg-red-400/5 transition-colors text-left"
+                >
+                  <span className="font-semibold text-red-400">Full Financial Reset</span>
+                  <span className="text-xs text-muted-foreground mt-1">Delete all transactions, budgets, goals, and debts.</span>
+                </button>
+
+                <button 
+                  onClick={() => handleOpenReset('Factory')}
+                  className="flex flex-col items-start p-4 rounded-xl border border-rose-600/20 hover:bg-rose-600/5 transition-colors text-left"
+                >
+                  <span className="font-semibold text-rose-600">Factory Reset</span>
+                  <span className="text-xs text-muted-foreground mt-1">Delete absolutely everything and return to onboarding.</span>
+                </button>
+              </div>
+            </div>
 
             <div className="pt-6 border-t border-white/5">
               <button 
