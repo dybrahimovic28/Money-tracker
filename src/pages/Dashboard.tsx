@@ -53,7 +53,6 @@ export function Dashboard() {
   const singleStats = isAllAccounts ? null : firstCurrencyStats
 
   const money_left = singleStats ? singleStats.balance : 0
-  const expenses = singleStats ? singleStats.totalExpense : 0
   const income = singleStats ? singleStats.totalIncome : 0
   
   let health = 0
