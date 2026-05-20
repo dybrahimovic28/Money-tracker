@@ -224,6 +224,14 @@ export function Accounts() {
                     <option value="ZMW">ZMW</option>
                     <option value="ZAR">ZAR</option>
                     <option value="BWP">BWP</option>
+                    <option value="MWK">MWK</option>
+                    <option value="NAD">NAD</option>
+                    <option value="SZL">SZL</option>
+                    <option value="MZN">MZN</option>
+                    <option value="TZS">TZS</option>
+                    <option value="KES">KES</option>
+                    <option value="UGX">UGX</option>
+                    <option value="RWF">RWF</option>
                   </select>
                 </div>
               </div>

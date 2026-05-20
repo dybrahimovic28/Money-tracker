@@ -14,7 +14,7 @@ import { format } from 'date-fns'
 
 export function Debts() {
   const { user } = useAuth()
-  const { selectedAccountId } = useAccounts()
+  const { selectedAccountId, accounts } = useAccounts()
   const { debts, totalDebt, totalCredit, netPosition, overdueCount, saveDebt, updateDebt, deleteDebt } = useDebts()
   
   const [activeTab, setActiveTab] = useState<DebtType>('owe')
@@ -27,12 +27,13 @@ export function Debts() {
   const [currency, setCurrency] = useState('USD')
   const [reason, setReason] = useState('')
   const [dueDate, setDueDate] = useState('')
+  const [linkedAccount, setLinkedAccount] = useState(selectedAccountId === 'all' ? '' : selectedAccountId)
 
   const handleAddDebt = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
-    if (selectedAccountId === 'all') {
-      toast.error('Select an account first.')
+    if (!linkedAccount) {
+      toast.error('Select a linked account.')
       return
     }
 
@@ -40,7 +41,7 @@ export function Debts() {
     try {
       await saveDebt({
         user_id: user.id,
-        account_id: selectedAccountId,
+        account_id: linkedAccount,
         type: activeTab,
         person_name: personName,
         amount: Number(amount),
@@ -91,10 +92,7 @@ export function Debts() {
         </div>
         
         <Button onClick={() => {
-          if (selectedAccountId === 'all') {
-            toast.error('Select an account first.')
-            return
-          }
+          setLinkedAccount(selectedAccountId === 'all' ? '' : selectedAccountId)
           setIsModalOpen(true)
         }} className="rounded-xl shadow-lg shadow-primary/25">
           <Plus className="mr-2 h-4 w-4" />
@@ -250,18 +248,42 @@ export function Debts() {
                     <option value="GBP">GBP</option>
                     <option value="ZMW">ZMW</option>
                     <option value="ZAR">ZAR</option>
+                    <option value="BWP">BWP</option>
+                    <option value="MWK">MWK</option>
+                    <option value="NAD">NAD</option>
+                    <option value="SZL">SZL</option>
+                    <option value="MZN">MZN</option>
+                    <option value="TZS">TZS</option>
+                    <option value="KES">KES</option>
+                    <option value="UGX">UGX</option>
+                    <option value="RWF">RWF</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Reason (Optional)</label>
+                <label className="text-sm font-medium mb-1.5 block">Notes (Optional)</label>
                 <Input 
                   value={reason} 
                   onChange={e => setReason(e.target.value)} 
                   placeholder="e.g. Rent, Dinner"
                   className="bg-background/50"
                 />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Linked Account</label>
+                <select 
+                  className="w-full h-10 px-3 rounded-md bg-background/50 border border-white/10 focus:ring-1 focus:ring-primary outline-none"
+                  value={linkedAccount}
+                  onChange={e => setLinkedAccount(e.target.value)}
+                  required
+                >
+                  <option value="" disabled>Select an account</option>
+                  {accounts.map(acc => (
+                    <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency_code})</option>
+                  ))}
+                </select>
               </div>
 
               <div>
