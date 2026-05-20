@@ -249,7 +249,7 @@ export function Settings() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Developer</span>
-                <a href="mailto:dybrahimovic28@gmail.com" className="text-primary font-semibold hover:underline">{versionInfo.developer}</a>
+                <a href="mailto:dybrahimovic28@gmail.com" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">{versionInfo.developer}</a>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed pt-2">
                 {versionInfo.releaseNotes}
