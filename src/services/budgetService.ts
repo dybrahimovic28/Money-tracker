@@ -93,5 +93,15 @@ export const budgetService = {
       console.warn('Failed to delete budget from Supabase, deleted locally', err)
     }
     return id
+  },
+
+  async resetBudgets(userId: string) {
+    if (!navigator.onLine) {
+      localStorage.removeItem(BUDGETS_CACHE_KEY)
+      return
+    }
+    const { error } = await supabase.from('budgets').delete().eq('user_id', userId)
+    if (error) throw error
+    localStorage.removeItem(BUDGETS_CACHE_KEY)
   }
 }

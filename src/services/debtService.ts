@@ -114,5 +114,15 @@ export const debtService = {
     
     if (error) throw error
     return id
+  },
+
+  async resetDebts(userId: string) {
+    if (!navigator.onLine) {
+      localStorage.removeItem(`debts_${userId}`)
+      return
+    }
+    const { error } = await supabase.from('debts').delete().eq('user_id', userId)
+    if (error) throw error
+    localStorage.removeItem(`debts_${userId}`)
   }
 }

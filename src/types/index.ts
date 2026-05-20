@@ -56,13 +56,22 @@ export interface Transaction {
 export interface SavingsGoal {
   id: string
   user_id: string
-  account_id?: string
+  account_id: string
   name: string
   target_amount: number
   current_amount: number
   deadline: string
   created_at: string
 }
+
+export interface MonthlyResetLog {
+  id: string
+  user_id: string
+  month: number
+  year: number
+  created_at: string
+}
+
 
 export type AccountType = 'Cash' | 'Bank' | 'Mobile Money' | 'Savings' | 'Business' | 'Custom'
 

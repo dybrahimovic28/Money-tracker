@@ -2,9 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { transactionService } from '@/services/transactionService'
 import { useAuth } from '@/context/AuthContext'
 import { Transaction } from '@/types'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAccounts } from '@/context/AccountContext'
+import { resetService } from '@/services/resetService'
 
 export function useTransactions() {
   const { user } = useAuth()
@@ -51,6 +52,12 @@ export function useTransactions() {
     enabled: !!user,
   })
 
+  const resetQuery = useQuery({
+    queryKey: ['monthly_resets', user?.id],
+    queryFn: () => resetService.getLatestMonthlyReset(user!.id),
+    enabled: !!user,
+  })
+
   const addMutation = useMutation({
     mutationFn: (newTx: Omit<Transaction, 'id' | 'created_at'>) => transactionService.addTransaction(newTx),
     onSuccess: () => {
@@ -72,8 +79,16 @@ export function useTransactions() {
     },
   })
 
+  const activeTransactions = useMemo(() => {
+    const txs = query.data || []
+    const resetData = resetQuery.data
+    if (!resetData) return txs
+    return txs.filter(t => new Date(t.created_at) > new Date(resetData.created_at))
+  }, [query.data, resetQuery.data])
+
   return {
     transactions: query.data || [],
+    activeTransactions,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,

@@ -8,7 +8,7 @@ import { useAccounts } from '@/context/AccountContext'
 export function useBudgets() {
   const { user } = useAuth()
   const { selectedAccountId } = useAccounts()
-  const { transactions } = useTransactions()
+  const { activeTransactions } = useTransactions()
   const queryClient = useQueryClient()
 
   const query = useQuery({
@@ -39,7 +39,7 @@ export function useBudgets() {
     const currentYear = now.getFullYear()
 
     // Aggregate transactions for this category, month, and year
-    const spent = transactions
+    const spent = activeTransactions
       .filter(t => t.type === 'expense' && 
                    t.category.toLowerCase() === b.category.toLowerCase() &&
                    (new Date(t.created_at).getMonth() + 1) === currentMonth &&

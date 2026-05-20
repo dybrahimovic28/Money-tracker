@@ -4,12 +4,12 @@ import { dashboardService } from '@/services/dashboardService'
 import { Transaction } from '@/types'
 
 export function useDashboardStats() {
-  const { transactions, isLoading, isError } = useTransactions()
+  const { transactions, activeTransactions, isLoading, isError } = useTransactions()
 
   const statsByCurrency = useMemo(() => {
-    if (!transactions.length) return {}
+    if (!activeTransactions.length) return {}
     
-    const grouped = transactions.reduce((acc, tx) => {
+    const grouped = activeTransactions.reduce((acc, tx) => {
       const curr = tx.currency || 'USD'
       if (!acc[curr]) acc[curr] = []
       acc[curr].push(tx)
@@ -24,12 +24,13 @@ export function useDashboardStats() {
   }, [transactions])
 
   const chartData = useMemo(() => {
-    if (!transactions.length) return []
-    return dashboardService.calculateChartData(transactions)
-  }, [transactions])
+    if (!activeTransactions.length) return []
+    return dashboardService.calculateChartData(activeTransactions)
+  }, [activeTransactions])
 
   return {
     transactions,
+    activeTransactions,
     statsByCurrency,
     chartData,
     isLoading,

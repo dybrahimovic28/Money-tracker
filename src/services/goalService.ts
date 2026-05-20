@@ -105,5 +105,15 @@ export const goalService = {
       console.warn('Failed to delete goal from Supabase, deleted locally', err)
     }
     return id
+  },
+
+  async resetGoals(userId: string) {
+    if (!navigator.onLine) {
+      localStorage.removeItem(GOALS_CACHE_KEY)
+      return
+    }
+    const { error } = await supabase.from('savings_goals').delete().eq('user_id', userId)
+    if (error) throw error
+    localStorage.removeItem(GOALS_CACHE_KEY)
   }
 }

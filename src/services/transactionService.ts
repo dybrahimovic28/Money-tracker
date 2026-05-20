@@ -55,5 +55,15 @@ export const transactionService = {
     
     if (error) throw error
     return id
+  },
+
+  async resetTransactions(userId: string) {
+    if (!navigator.onLine) {
+      localStorage.removeItem(`transactions_${userId}`)
+      return
+    }
+    const { error } = await supabase.from('transactions').delete().eq('user_id', userId)
+    if (error) throw error
+    localStorage.removeItem(`transactions_${userId}`)
   }
 }

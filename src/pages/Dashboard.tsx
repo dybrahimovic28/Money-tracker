@@ -23,11 +23,11 @@ import { useProfile } from '@/hooks/useProfile'
 export function Dashboard() {
   const navigate = useNavigate()
   const { formatAmount } = useCurrency()
-  const { statsByCurrency, chartData, isLoading, transactions } = useDashboardStats()
+  const { profile } = useProfile()
+  const { statsByCurrency, chartData, isLoading, activeTransactions } = useDashboardStats()
   const { budgetStats } = useBudgets()
   const { totalSavingsCurrent } = useSavingsGoals()
   const { selectedAccountId } = useAccounts()
-  const { profile } = useProfile()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalDefaultType, setModalDefaultType] = useState<'income' | 'expense'>('expense')
@@ -45,7 +45,7 @@ export function Dashboard() {
     )
   }
 
-  const recentTransactions = transactions.slice(0, 5)
+  const recentTransactions = activeTransactions.slice(0, 5)
   const isAllAccounts = selectedAccountId === 'all'
   
   // Single Account Stats fallback
@@ -68,7 +68,7 @@ export function Dashboard() {
   const targetProgress = targetMonthlyIncome > 0 ? Math.min(Math.round((currentIncome / targetMonthlyIncome) * 100), 100) : 0
 
   const handleExportQuick = () => {
-    if (transactions.length === 0) {
+    if (activeTransactions.length === 0) {
       toast.error('No transactions to export')
       return
     }

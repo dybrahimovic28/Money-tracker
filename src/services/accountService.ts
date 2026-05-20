@@ -133,5 +133,15 @@ export const accountService = {
       throw error
     }
     return id
+  },
+
+  async resetAccounts(userId: string) {
+    if (!navigator.onLine) {
+      localStorage.removeItem(`accounts_${userId}`)
+      return
+    }
+    const { error } = await supabase.from('accounts').delete().eq('user_id', userId)
+    if (error) throw error
+    localStorage.removeItem(`accounts_${userId}`)
   }
 }
