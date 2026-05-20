@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "buildNumber": "100",
   "buildDate": "2026-05-17",
-  "developer": "Antigravity Dev Team",
+  "developer": "HENDEV",
   "license": "MIT License",
   "releaseNotes": "Initial production-ready release of Money Tracker app. Premium fintech dark design, offline IndexedDB transaction syncing, Supabase dynamic backend integration, multi-currency context support, and advanced diagnostics."
 }
