@@ -10,7 +10,6 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useCurrency } from '@/context/CurrencyContext'
 import { useDashboardStats } from '@/hooks/useDashboardStats'
 import { useBudgets } from '@/hooks/useBudgets'
-import { useSavingsGoals } from '@/hooks/useSavingsGoals'
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader'
 import { format } from 'date-fns'
 import { useState } from 'react'
@@ -24,9 +23,8 @@ export function Dashboard() {
   const navigate = useNavigate()
   const { formatAmount } = useCurrency()
   const { profile } = useProfile()
-  const { statsByCurrency, chartData, isLoading, activeTransactions } = useDashboardStats()
+  const { stats, chartData, isLoading, activeTransactions } = useDashboardStats()
   const { budgetStats } = useBudgets()
-  const { totalSavingsCurrent } = useSavingsGoals()
   const { selectedAccountId } = useAccounts()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -46,14 +44,9 @@ export function Dashboard() {
   }
 
   const recentTransactions = activeTransactions.slice(0, 5)
-  const isAllAccounts = selectedAccountId === 'all'
-  
-  // Single Account Stats fallback
-  const firstCurrencyStats = Object.values(statsByCurrency)[0] || { totalIncome: 0, totalExpense: 0, balance: 0, monthlyGrowth: 0, currentMonthIncome: 0, currentMonthExpense: 0 }
-  const singleStats = isAllAccounts ? null : firstCurrencyStats
 
-  const money_left = singleStats ? singleStats.balance : 0
-  const income = singleStats ? singleStats.totalIncome : 0
+  const money_left = stats.balance || 0
+  const income = stats.totalIncome || 0
   
   let health = 0
   if (income === 0) {
@@ -64,7 +57,7 @@ export function Dashboard() {
   const computedHealthScore = Math.max(0, Math.min(Math.round(health), 100))
 
   const targetMonthlyIncome = profile?.target_monthly_income || Number(localStorage.getItem('target_monthly_income')) || 0
-  const currentIncome = singleStats?.currentMonthIncome || 0
+  const currentIncome = stats.currentMonthIncome || 0
   const targetProgress = targetMonthlyIncome > 0 ? Math.min(Math.round((currentIncome / targetMonthlyIncome) * 100), 100) : 0
 
   const handleExportQuick = () => {
@@ -85,79 +78,30 @@ export function Dashboard() {
         
         {/* Hero Section */}
         <div className="lg:col-span-8 space-y-6">
-          {isAllAccounts ? (
-            <div className="space-y-4">
-              {Object.entries(statsByCurrency).length === 0 && (
-                <BalanceCard balance={0} monthlyGrowth={0} title="Total Balance" />
-              )}
-              {Object.entries(statsByCurrency).map(([currency, stat]) => (
-                <div key={currency} className="mb-4">
-                  <BalanceCard 
-                    balance={stat.balance} 
-                    monthlyGrowth={stat.monthlyGrowth} 
-                    currencyCode={currency}
-                    title={`${currency} Balance`}
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                    <StatCard 
-                      title="Total Income" 
-                      amount={stat.totalIncome} 
-                      icon={ArrowUpToLine} 
-                      iconClassName="text-emerald-500 bg-emerald-500/10"
-                      currencyCode={currency}
-                    />
-                    <StatCard 
-                      title="Total Expenses" 
-                      amount={stat.totalExpense} 
-                      icon={ArrowDownToLine} 
-                      iconClassName="text-red-500 bg-red-500/10"
-                      currencyCode={currency}
-                    />
-                    <StatCard 
-                      title="Savings Deposited" 
-                      amount={totalSavingsCurrent} 
-                      icon={Wallet} 
-                      iconClassName="text-blue-500 bg-blue-500/10"
-                      currencyCode={currency}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <>
-              <BalanceCard 
-                balance={singleStats?.balance || 0} 
-                monthlyGrowth={singleStats?.monthlyGrowth || 0} 
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatCard 
-                  title="Total Income" 
-                  amount={singleStats?.totalIncome || 0} 
-                  icon={ArrowUpToLine} 
-                  iconClassName="text-emerald-500 bg-emerald-500/10" 
-                />
-                <StatCard 
-                  title="Total Expenses" 
-                  amount={singleStats?.totalExpense || 0} 
-                  icon={ArrowDownToLine} 
-                  iconClassName="text-red-500 bg-red-500/10" 
-                />
-                <StatCard 
-                  title="Savings Deposited" 
-                  amount={totalSavingsCurrent} 
-                  icon={Wallet} 
-                  iconClassName="text-blue-500 bg-blue-500/10" 
-                />
-              </div>
-            </>
-          )}
+          <BalanceCard 
+            balance={stats.balance || 0} 
+            monthlyGrowth={stats.monthlyGrowth || 0} 
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <StatCard 
+              title="Total Income" 
+              amount={stats.totalIncome || 0} 
+              icon={ArrowUpToLine} 
+              iconClassName="text-emerald-500 bg-emerald-500/10" 
+            />
+            <StatCard 
+              title="Total Expenses" 
+              amount={stats.totalExpense || 0} 
+              icon={ArrowDownToLine} 
+              iconClassName="text-red-500 bg-red-500/10" 
+            />
+          </div>
 
           {/* Quick Actions grid */}
           <div className="grid grid-cols-4 gap-2 md:gap-4">
             <QuickActionButton 
               onClick={() => {
-                if (isAllAccounts) {
+                if (!selectedAccountId) {
                   toast.error('Select an account first.')
                   return
                 }
@@ -170,7 +114,7 @@ export function Dashboard() {
             />
             <QuickActionButton 
               onClick={() => {
-                if (isAllAccounts) {
+                if (!selectedAccountId) {
                   toast.error('Select an account first.')
                   return
                 }

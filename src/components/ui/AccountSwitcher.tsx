@@ -1,12 +1,8 @@
 import { useAccounts } from '@/context/AccountContext'
-import { Wallet, ChevronDown, Plus } from 'lucide-react'
+import { Wallet, ChevronDown } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
-interface AccountSwitcherProps {
-  onAddAccount?: () => void
-}
-
-export function AccountSwitcher({ onAddAccount }: AccountSwitcherProps) {
+export function AccountSwitcher() {
   const { accounts, selectedAccountId, setSelectedAccountId } = useAccounts()
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -22,7 +18,7 @@ export function AccountSwitcher({ onAddAccount }: AccountSwitcherProps) {
   }, [])
 
   const selectedAccount = accounts.find(a => a.id === selectedAccountId)
-  const displayName = selectedAccountId === 'all' ? 'All Accounts' : selectedAccount?.name || 'All Accounts'
+  const displayName = selectedAccount?.name || 'Select Account'
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -38,15 +34,6 @@ export function AccountSwitcher({ onAddAccount }: AccountSwitcherProps) {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-card border border-white/10 rounded-xl shadow-lg z-50 overflow-hidden backdrop-blur-md">
           <div className="py-1">
-            <button
-              onClick={() => {
-                setSelectedAccountId('all')
-                setIsOpen(false)
-              }}
-              className={`w-full text-left px-4 py-2 text-sm transition-colors ${selectedAccountId === 'all' ? 'bg-primary/10 text-primary' : 'hover:bg-white/5 text-foreground'}`}
-            >
-              All Accounts
-            </button>
             {accounts.map(acc => (
               <button
                 key={acc.id}
@@ -61,20 +48,6 @@ export function AccountSwitcher({ onAddAccount }: AccountSwitcherProps) {
               </button>
             ))}
           </div>
-          {onAddAccount && accounts.length < 3 && (
-            <div className="border-t border-white/10 p-1">
-              <button
-                onClick={() => {
-                  setIsOpen(false)
-                  onAddAccount()
-                }}
-                className="w-full flex items-center text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Account ({accounts.length}/3)
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>

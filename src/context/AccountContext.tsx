@@ -16,7 +16,7 @@ const AccountContext = createContext<AccountContextType | undefined>(undefined)
 export function AccountProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [accounts, setAccounts] = useState<Account[]>([])
-  const [selectedAccountId, setSelectedAccountId] = useState<string>('all')
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
 
   const refreshAccounts = async () => {
@@ -31,9 +31,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       const data = await accountService.getAccounts(user.id)
       setAccounts(data)
       
-      // If the selected account no longer exists, reset to 'all'
-      if (selectedAccountId !== 'all' && !data.find(a => a.id === selectedAccountId)) {
-        setSelectedAccountId('all')
+      if (data.length > 0) {
+        if (!selectedAccountId || !data.find(a => a.id === selectedAccountId)) {
+          setSelectedAccountId(data[0].id)
+        }
+      } else {
+        setSelectedAccountId('')
       }
     } catch (error) {
       console.error('Failed to load accounts:', error)

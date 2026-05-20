@@ -8,7 +8,6 @@ import { Budgets } from './pages/Budgets'
 import { Reports } from './pages/Reports'
 import { Analytics } from './pages/Analytics'
 import { Settings } from './pages/Settings'
-import { Accounts } from './pages/Accounts'
 import { Debts } from './pages/Debts'
 
 import { NotFound } from './pages/NotFound'
@@ -26,7 +25,6 @@ function App() {
         }
       >
         <Route index element={<Dashboard />} />
-        <Route path="accounts" element={<Accounts />} />
         <Route path="transactions" element={<Transactions />} />
         <Route path="budgets" element={<Budgets />} />
         <Route path="reports" element={<Reports />} />

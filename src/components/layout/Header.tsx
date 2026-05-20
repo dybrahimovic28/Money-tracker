@@ -3,11 +3,9 @@ import { ThemeToggle } from '../ui/ThemeToggle'
 import { NotificationBell } from '../ui/NotificationBell'
 import { AccountSwitcher } from '../ui/AccountSwitcher'
 import { format } from 'date-fns'
-import { useNavigate } from 'react-router-dom'
 
 export function Header() {
   const { user } = useAuth()
-  const navigate = useNavigate()
   const today = format(new Date(), 'EEEE, d MMMM')
   
   const getGreetingName = () => {
@@ -34,7 +32,7 @@ export function Header() {
 
       <div className="flex items-center space-x-4">
         <div className="hidden md:flex items-center space-x-3">
-          <AccountSwitcher onAddAccount={() => navigate('/accounts')} />
+          <AccountSwitcher />
           <ThemeToggle />
           <NotificationBell count={2} />
         </div>

@@ -7,7 +7,6 @@ import { motion } from 'framer-motion'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
-  { name: 'Accounts', href: '/accounts', icon: Wallet },
   { name: 'Transactions', href: '/transactions', icon: ArrowRightLeft },
   { name: 'Budgets', href: '/budgets', icon: Target },
   { name: 'Reports', href: '/reports', icon: PieChart },

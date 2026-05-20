@@ -1,40 +1,21 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useTransactions } from '@/hooks/useTransactions'
 import { useCurrency } from '@/context/CurrencyContext'
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { format, subDays } from 'date-fns'
 import { 
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip, 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, 
-  LineChart, Line 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from 'recharts'
-import { Activity, TrendingUp, TrendingDown, DollarSign, PieChart as PieIcon, Activity as ChartIcon } from 'lucide-react'
+import { Activity, TrendingUp, TrendingDown, DollarSign, PieChart as PieIcon } from 'lucide-react'
 
 const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#06b6d4', '#64748b']
 
 export function Analytics() {
   const { formatAmount } = useCurrency()
-  const { transactions, isLoading } = useTransactions()
-  const [timeRange, setTimeRange] = useState<'7days' | '30days' | '12months' | 'all'>('30days')
-
-  // Filter transactions based on date range selection
-  const filteredTransactions = useMemo(() => {
-    const now = new Date()
-    return transactions.filter(t => {
-      const txDate = new Date(t.created_at)
-      if (timeRange === '7days') {
-        return txDate >= subDays(now, 7)
-      } else if (timeRange === '30days') {
-        return txDate >= subDays(now, 30)
-      } else if (timeRange === '12months') {
-        return txDate >= subDays(now, 365)
-      }
-      return true
-    })
-  }, [transactions, timeRange])
+  const { activeTransactions, isLoading } = useTransactions()
 
   // Aggregate Key Statistics
   const stats = useMemo(() => {
@@ -45,7 +26,7 @@ export function Analytics() {
     let topCategoryVal = 0
     let topTransaction: any = null
 
-    filteredTransactions.forEach(t => {
+    activeTransactions.forEach(t => {
       const amt = Number(t.amount)
       if (t.type === 'income') {
         income += amt
@@ -74,12 +55,12 @@ export function Analytics() {
       topCategoryVal,
       topTransaction
     }
-  }, [filteredTransactions])
+  }, [activeTransactions])
 
   // Pie Chart Data: Expense Category Breakdown
   const pieData = useMemo(() => {
     const totals: Record<string, number> = {}
-    filteredTransactions.forEach(t => {
+    activeTransactions.forEach(t => {
       if (t.type === 'expense') {
         totals[t.category] = (totals[t.category] || 0) + Number(t.amount)
       }
@@ -88,39 +69,23 @@ export function Analytics() {
       name: cat,
       value: Number(totals[cat].toFixed(2))
     })).sort((a, b) => b.value - a.value)
-  }, [filteredTransactions])
+  }, [activeTransactions])
 
-  // Aggregated Daily Timeline Data for Charts
-  const timelineData = useMemo(() => {
-    const sorted = [...filteredTransactions].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-    const dailyGroup: Record<string, { income: number; expense: number; date: Date }> = {}
-
-    sorted.forEach(t => {
-      const dateStr = format(new Date(t.created_at), 'yyyy-MM-dd')
-      const amt = Number(t.amount)
-      if (!dailyGroup[dateStr]) {
-        dailyGroup[dateStr] = { income: 0, expense: 0, date: new Date(t.created_at) }
-      }
-      if (t.type === 'income') {
-        dailyGroup[dateStr].income += amt
+  const chartData = useMemo(() => {
+    const monthlyData = activeTransactions.reduce((acc, tx) => {
+      const month = new Date(tx.created_at).toLocaleString('default', { month: 'short' })
+      if (!acc[month]) acc[month] = { name: month, income: 0, expenses: 0, order: new Date(tx.created_at).getMonth() }
+      
+      if (tx.type === 'income') {
+        acc[month].income += Number(tx.amount)
       } else {
-        dailyGroup[dateStr].expense += amt
+        acc[month].expenses += Number(tx.amount)
       }
-    })
+      return acc
+    }, {} as Record<string, { name: string, income: number, expenses: number, order: number }>)
 
-    let runningBalance = 0
-    return Object.keys(dailyGroup).map(key => {
-      const day = dailyGroup[key]
-      runningBalance += day.income - day.expense
-      return {
-        dateStr: format(day.date, 'MMM dd'),
-        income: Number(day.income.toFixed(2)),
-        expenses: Number(day.expense.toFixed(2)),
-        balance: Number(runningBalance.toFixed(2)),
-        rawDate: day.date
-      }
-    }).sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime())
-  }, [filteredTransactions])
+    return Object.values(monthlyData).sort((a, b) => a.order - b.order)
+  }, [activeTransactions])
 
   if (isLoading) {
     return (
@@ -134,7 +99,7 @@ export function Analytics() {
     )
   }
 
-  if (transactions.length === 0) {
+  if (activeTransactions.length === 0) {
     return (
       <div className="h-[70vh] flex items-center justify-center">
         <EmptyState 
@@ -152,31 +117,11 @@ export function Analytics() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-8 pb-12"
     >
-      {/* Header section with Range Selector */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {/* Header section */}
+      <div className="flex flex-col justify-between items-start gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Advanced Analytics</h1>
-          <p className="text-sm text-muted-foreground mt-1">Deep dives into cashflow breakdowns, cumulative balances, and ratios.</p>
-        </div>
-
-        {/* Range Buttons */}
-        <div className="flex rounded-xl overflow-hidden border border-white/10 p-1 bg-card/50 glass">
-          {(['7days', '30days', '12months', 'all'] as const).map(range => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
-                timeRange === range 
-                  ? 'bg-primary text-white shadow' 
-                  : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
-              }`}
-            >
-              {range === '7days' && '7 Days'}
-              {range === '30days' && '30 Days'}
-              {range === '12months' && '1 Year'}
-              {range === 'all' && 'All Time'}
-            </button>
-          ))}
+          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <p className="text-sm text-muted-foreground mt-1">Cashflow breakdowns and ratios.</p>
         </div>
       </div>
 
@@ -239,46 +184,19 @@ export function Analytics() {
       {/* Analytical Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Cumulative Wealth Curve & Income vs Expense comparisons */}
+        {/* Income vs Expense comparisons */}
         <div className="lg:col-span-8 space-y-6">
-          
-          <GlassCard intensity="low" className="p-6 border border-white/5">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-foreground text-lg flex items-center">
-                <ChartIcon className="w-4 h-4 mr-2 text-primary" /> Cumulative Balance Trend
-              </h3>
-            </div>
-            
-            <div className="h-72 w-full">
-              {timelineData.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Not enough timeline points</div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="opacity-5" />
-                    <XAxis dataKey="dateStr" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.5 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.5 }} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: '1px solid hsl(var(--border))' }}
-                      itemStyle={{ color: 'hsl(var(--foreground))' }}
-                    />
-                    <Line type="monotone" dataKey="balance" stroke="#3b82f6" strokeWidth={3} dot={{ r: 2 }} activeDot={{ r: 6 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </GlassCard>
 
           <GlassCard intensity="low" className="p-6 border border-white/5">
             <h3 className="font-bold text-foreground text-lg mb-6">Income vs Expense Comparison</h3>
             <div className="h-72 w-full">
-              {timelineData.length === 0 ? (
+              {chartData.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Not enough spending records</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="opacity-5" />
-                    <XAxis dataKey="dateStr" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.5 }} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.5 }} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.5 }} />
                     <Tooltip 
                       contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: '1px solid hsl(var(--border))' }}

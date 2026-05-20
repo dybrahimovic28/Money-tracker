@@ -14,9 +14,7 @@ import { useState, useRef } from 'react'
 import { resetService } from '@/services/resetService'
 import { transactionService } from '@/services/transactionService'
 import { budgetService } from '@/services/budgetService'
-import { goalService } from '@/services/goalService'
 import { debtService } from '@/services/debtService'
-import { accountService } from '@/services/accountService'
 
 export function Settings() {
   const { user, signOut } = useAuth()
@@ -68,14 +66,11 @@ export function Settings() {
       } else if (type === 'Financial') {
         await transactionService.resetTransactions(user.id)
         await budgetService.resetBudgets(user.id)
-        await goalService.resetGoals(user.id)
         await debtService.resetDebts(user.id)
       } else if (type === 'Factory') {
         await transactionService.resetTransactions(user.id)
         await budgetService.resetBudgets(user.id)
-        await goalService.resetGoals(user.id)
         await debtService.resetDebts(user.id)
-        await accountService.resetAccounts(user.id)
         localStorage.clear()
         window.location.reload()
         return
