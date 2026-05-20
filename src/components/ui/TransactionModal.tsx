@@ -137,17 +137,17 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
             exit={{ opacity: 0, scale: 0.95 }}
             className="w-full max-w-md max-h-screen overflow-y-auto"
           >
-            <GlassCard intensity="high" className="p-6 border border-white/10 shadow-2xl relative">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-foreground">
+            <GlassCard intensity="high" className="p-8 border border-white/10 shadow-2xl relative">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold text-foreground">
                   {transactionToEdit ? 'Edit Transaction' : 'Add Transaction'}
                 </h2>
-                <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors">
+                <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors">
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 
                 {selectedAccountId === 'all' && (
                   <div className="bg-orange-500/10 border border-orange-500/20 text-orange-400 p-3 rounded-lg text-sm mb-4">
@@ -265,9 +265,14 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
                   />
                 </div>
 
-                <Button type="submit" disabled={isAdding} className="w-full mt-6 rounded-xl py-6 text-lg font-bold">
-                  {isAdding ? 'Saving...' : transactionToEdit ? 'Save Changes' : 'Save Transaction'}
-                </Button>
+                <div className="flex space-x-4 pt-4 mt-2">
+                  <Button type="button" variant="outline" onClick={onClose} className="flex-1 rounded-xl py-6 text-base font-bold bg-white/5 hover:bg-white/10 border-white/10">
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isAdding} className="flex-1 rounded-xl py-6 text-base font-bold">
+                    {isAdding ? 'Saving...' : transactionToEdit ? 'Save Changes' : 'Save Transaction'}
+                  </Button>
+                </div>
               </form>
             </GlassCard>
           </motion.div>

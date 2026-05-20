@@ -10,16 +10,10 @@ export function useDashboardStats() {
     return dashboardService.calculateStats(activeTransactions)
   }, [activeTransactions])
 
-  const chartData = useMemo(() => {
-    if (!activeTransactions.length) return []
-    return dashboardService.calculateChartData(activeTransactions)
-  }, [activeTransactions])
-
   return {
     transactions,
     activeTransactions,
     stats,
-    chartData,
     isLoading,
     isError
   }

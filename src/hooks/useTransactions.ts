@@ -5,7 +5,6 @@ import { Transaction } from '@/types'
 import { useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAccounts } from '@/context/AccountContext'
-import { resetService } from '@/services/resetService'
 
 export function useTransactions() {
   const { user } = useAuth()
@@ -52,11 +51,6 @@ export function useTransactions() {
     enabled: !!user,
   })
 
-  const resetQuery = useQuery({
-    queryKey: ['monthly_resets', user?.id],
-    queryFn: () => resetService.getLatestMonthlyReset(user!.id),
-    enabled: !!user,
-  })
 
   const addMutation = useMutation({
     mutationFn: (newTx: Omit<Transaction, 'id' | 'created_at'>) => transactionService.addTransaction(newTx),
@@ -80,11 +74,8 @@ export function useTransactions() {
   })
 
   const activeTransactions = useMemo(() => {
-    const txs = query.data || []
-    const resetData = resetQuery.data
-    if (!resetData) return txs
-    return txs.filter(t => new Date(t.created_at) > new Date(resetData.created_at))
-  }, [query.data, resetQuery.data])
+    return query.data || []
+  }, [query.data])
 
   return {
     transactions: query.data || [],

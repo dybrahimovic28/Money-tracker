@@ -6,7 +6,6 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { StatCard } from '@/components/ui/StatCard'
 import { ArrowDownToLine, ArrowUpToLine, RefreshCw, FileText, Wallet } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useCurrency } from '@/context/CurrencyContext'
 import { useDashboardStats } from '@/hooks/useDashboardStats'
 import { useBudgets } from '@/hooks/useBudgets'
@@ -23,7 +22,7 @@ export function Dashboard() {
   const navigate = useNavigate()
   const { formatAmount } = useCurrency()
   const { profile } = useProfile()
-  const { stats, chartData, isLoading, activeTransactions } = useDashboardStats()
+  const { stats, isLoading, activeTransactions } = useDashboardStats()
   const { budgetStats } = useBudgets()
   const { selectedAccountId } = useAccounts()
 
@@ -139,39 +138,6 @@ export function Dashboard() {
             />
           </div>
 
-          {/* Recharts Area Chart */}
-          <GlassCard intensity="low" className="p-6 border border-white/5 shadow-xl">
-            <h3 className="font-bold text-foreground text-lg mb-6">Cash Flow (Monthly timeline)</h3>
-            <div className="h-64 w-full">
-              {chartData.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Add income or expense transactions to view cashflow trends</div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="opacity-5" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'currentColor', opacity: 0.5 }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'currentColor', opacity: 0.5 }} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: '1px solid hsl(var(--border))' }}
-                      itemStyle={{ color: 'hsl(var(--foreground))' }}
-                    />
-                    <Area type="monotone" dataKey="income" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
-                    <Area type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </GlassCard>
         </div>
 
         {/* Sidebar Widgets */}

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, AlertTriangle } from 'lucide-react'
 
-export type ResetType = 'Monthly' | 'Transactions' | 'Financial' | 'Factory'
+export type ResetType = 'Factory'
 
 interface ResetDataModalProps {
   isOpen: boolean
@@ -17,52 +17,15 @@ export function ResetDataModal({ isOpen, onClose, onConfirm, type }: ResetDataMo
 
   if (!isOpen) return null
 
-  const getDetails = () => {
-    switch (type) {
-      case 'Monthly':
-        return {
-          title: 'Monthly Reset',
-          color: 'text-blue-400',
-          bg: 'bg-blue-400/10',
-          border: 'border-blue-400/20',
-          btn: 'bg-blue-600 hover:bg-blue-700',
-          desc: 'This will archive current month transactions and reset dashboard/budget totals. History and reports are kept.',
-          keyword: 'RESET'
-        }
-      case 'Transactions':
-        return {
-          title: 'Reset Transactions',
-          color: 'text-orange-400',
-          bg: 'bg-orange-400/10',
-          border: 'border-orange-400/20',
-          btn: 'bg-orange-600 hover:bg-orange-700',
-          desc: 'This will permanently delete all income and expense records. Accounts, budgets, and settings are kept.',
-          keyword: 'RESET'
-        }
-      case 'Financial':
-        return {
-          title: 'Full Financial Reset',
-          color: 'text-red-400',
-          bg: 'bg-red-400/10',
-          border: 'border-red-400/20',
-          btn: 'bg-red-600 hover:bg-red-700',
-          desc: 'This will delete all transactions, budgets, savings goals, and debts. Wallets and settings are kept.',
-          keyword: 'DELETE ALL'
-        }
-      case 'Factory':
-        return {
-          title: 'Factory Reset',
-          color: 'text-rose-600',
-          bg: 'bg-rose-600/10',
-          border: 'border-rose-600/20',
-          btn: 'bg-rose-600 hover:bg-rose-700',
-          desc: 'This will delete EVERYTHING including wallets, preferences, and cache. The app returns to onboarding state.',
-          keyword: 'FACTORY RESET'
-        }
-    }
+  const details = {
+    title: 'Factory Reset',
+    color: 'text-rose-600',
+    bg: 'bg-rose-600/10',
+    border: 'border-rose-600/20',
+    btn: 'bg-rose-600 hover:bg-rose-700',
+    desc: 'This action permanently deletes all app data and cannot be undone.',
+    keyword: 'FACTORY RESET'
   }
-
-  const details = getDetails()
   const isMatch = inputValue === details.keyword
 
   const handleAction = () => {

@@ -48,29 +48,5 @@ export const dashboardService = {
       currentMonthIncome,
       currentMonthExpense
     }
-  },
-
-  calculateChartData(transactions: Transaction[]) {
-    // Basic aggregation for the area chart (last 7 days or weeks)
-    // For simplicity, we'll aggregate by date string
-    const aggregated: Record<string, { income: number; expenses: number }> = {}
-
-    // Sort ascending for chart
-    const sorted = [...transactions].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-
-    sorted.forEach(t => {
-      const dateStr = new Date(t.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-      if (!aggregated[dateStr]) {
-        aggregated[dateStr] = { income: 0, expenses: 0 }
-      }
-      if (t.type === 'income') aggregated[dateStr].income += Number(t.amount)
-      else aggregated[dateStr].expenses += Number(t.amount)
-    })
-
-    return Object.keys(aggregated).map(key => ({
-      name: key,
-      income: aggregated[key].income,
-      expenses: aggregated[key].expenses
-    }))
   }
 }

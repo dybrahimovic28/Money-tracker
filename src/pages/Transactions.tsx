@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, Filter, ArrowDownToLine, ArrowUpToLine, MoreVertical, Edit, Trash2, Calendar, LayoutGrid, Download, ListOrdered } from 'lucide-react'
+import { Search, Filter, ArrowDownToLine, ArrowUpToLine, Edit, Trash2, Calendar, LayoutGrid, ListOrdered } from 'lucide-react'
 import { useCurrency } from '@/context/CurrencyContext'
 import { useTransactions } from '@/hooks/useTransactions'
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader'
@@ -35,12 +35,11 @@ export function Transactions() {
   // Modals & Context Menus
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null)
-  const [activeMenu, setActiveMenu] = useState<string | null>(null)
+
 
   const handleEdit = (tx: Transaction) => {
     setTransactionToEdit(tx)
     setIsModalOpen(true)
-    setActiveMenu(null)
   }
 
   const handleDelete = async (id: string) => {
@@ -52,7 +51,6 @@ export function Transactions() {
         toast.error(err.message || 'Failed to delete transaction')
       }
     }
-    setActiveMenu(null)
   }
 
   // Filter Logic
@@ -168,12 +166,11 @@ export function Transactions() {
           </Button>
           <Button 
             variant="outline" 
-            size="icon" 
             onClick={handleExportCSV}
             title="Export to CSV"
-            className="glass border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10 shrink-0 rounded-xl"
+            className="glass border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10 shrink-0 rounded-xl px-4"
           >
-            <Download className="h-4 w-4" />
+            Download Transcription
           </Button>
           <Button 
             onClick={() => {
@@ -316,42 +313,26 @@ export function Transactions() {
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-6">
                   <span className={`font-bold text-base ${tx.type === 'income' ? 'text-emerald-500' : 'text-foreground'}`}>
                     {tx.type === 'income' ? '+' : '-'}{formatAmount(Number(tx.amount))}
                   </span>
                   
-                  <div className="relative">
+                  <div className="flex items-center space-x-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button 
-                      onClick={() => setActiveMenu(activeMenu === tx.id ? null : tx.id)}
-                      className="text-muted-foreground hover:text-foreground opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-2 rounded-lg hover:bg-white/5"
+                      onClick={() => handleEdit(tx)}
+                      className="p-2 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-lg transition-colors"
+                      title="Edit"
                     >
-                      <MoreVertical className="h-5 w-5" />
+                      <Edit className="h-4 w-4" />
                     </button>
-                    
-                    <AnimatePresence>
-                      {activeMenu === tx.id && (
-                        <motion.div 
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          className="absolute right-0 top-full mt-1 w-32 rounded-xl border border-white/10 bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden z-20"
-                        >
-                          <button 
-                            onClick={() => handleEdit(tx)}
-                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/10 flex items-center transition-colors"
-                          >
-                            <Edit className="w-4 h-4 mr-2" /> Edit
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(tx.id)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 flex items-center transition-colors border-t border-white/5"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" /> Delete
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    <button 
+                      onClick={() => handleDelete(tx.id)}
+                      className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               </div>
