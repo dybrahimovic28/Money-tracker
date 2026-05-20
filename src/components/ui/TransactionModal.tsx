@@ -9,6 +9,8 @@ import { useAuth } from '@/context/AuthContext'
 import { useAccounts } from '@/context/AccountContext'
 import { Transaction } from '@/types'
 import toast from 'react-hot-toast'
+import { transactionService } from '@/services/transactionService'
+import { dashboardService } from '@/services/dashboardService'
 
 interface TransactionModalProps {
   isOpen: boolean
@@ -91,16 +93,20 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
     const account = accounts.find(a => a.id === accountId)
     const currency = account ? account.currency_code : 'USD'
 
-    const expenseAmount = Number(amount)
-    const currentBalance = Number(account?.current_balance || 0)
-
     if (type === 'expense' && account) {
-      let availableBalance = currentBalance
-      if (transactionToEdit && transactionToEdit.type === 'expense' && transactionToEdit.account_id === accountId) {
-        availableBalance += Number(transactionToEdit.amount)
+      const expenseAmount = Number(amount)
+      let currentBalance = 0
+      
+      try {
+        // Fetch fresh transactions to compute exact balance of the selected wallet before save
+        const txs = await transactionService.getTransactions(user.id, accountId)
+        currentBalance = dashboardService.calculateStats(txs).balance + Number(account.opening_balance || 0)
+      } catch (err) {
+        // Fallback
+        currentBalance = Number(account.current_balance || 0)
       }
 
-      if (expenseAmount > availableBalance) {
+      if (expenseAmount > currentBalance) {
         toast.error('Insufficient funds. Expense exceeds available balance.')
         return
       }
