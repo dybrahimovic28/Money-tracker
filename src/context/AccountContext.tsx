@@ -49,6 +49,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     refreshAccounts()
   }, [user])
 
+  useEffect(() => {
+    console.log("Accounts:", accounts)
+    console.log("Selected Account:", selectedAccountId)
+    console.log("Loading:", isLoading)
+  }, [accounts, selectedAccountId, isLoading])
+
   // Optional: persist selectedAccountId to localStorage so it remembers user preference
   useEffect(() => {
     if (selectedAccountId) {

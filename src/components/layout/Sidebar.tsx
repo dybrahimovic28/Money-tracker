@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { AccountSwitcher } from '../ui/AccountSwitcher'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
@@ -50,25 +51,33 @@ export function Sidebar() {
       </button>
 
       <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
-        {navigation.map((item) => {
+        {navigation.map((item, index) => {
           const isActive = location.pathname === item.href || (item.href !== '/' && location.pathname.startsWith(item.href))
           return (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={cn(
-                'group relative flex items-center rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200',
-                isActive 
-                  ? 'bg-primary/10 text-primary' 
-                  : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+            <div key={item.name} className="space-y-2">
+              <Link
+                to={item.href}
+                className={cn(
+                  'group relative flex items-center rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200',
+                  isActive 
+                    ? 'bg-primary/10 text-primary' 
+                    : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+                )}
+              >
+                <item.icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground", collapsed ? "mx-auto" : "mr-3")} />
+                {!collapsed && <span>{item.name}</span>}
+                {isActive && !collapsed && (
+                  <motion.div layoutId="activeNav" className="absolute right-2 h-1.5 w-1.5 rounded-full bg-primary" />
+                )}
+              </Link>
+              
+              {/* Insert AccountSwitcher right after Dashboard */}
+              {index === 0 && (
+                <div className="mb-2">
+                  <AccountSwitcher collapsed={collapsed} />
+                </div>
               )}
-            >
-              <item.icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground", collapsed ? "mx-auto" : "mr-3")} />
-              {!collapsed && <span>{item.name}</span>}
-              {isActive && !collapsed && (
-                <motion.div layoutId="activeNav" className="absolute right-2 h-1.5 w-1.5 rounded-full bg-primary" />
-              )}
-            </Link>
+            </div>
           )
         })}
       </div>

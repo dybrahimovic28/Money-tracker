@@ -167,9 +167,9 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-md max-h-screen overflow-y-auto"
+            className="w-full max-w-md max-h-[90vh] overflow-y-auto overflow-x-hidden scrollbar-hide pb-20"
           >
-            <GlassCard intensity="high" className="p-8 border border-white/10 shadow-2xl relative">
+            <GlassCard intensity="high" className="p-8 border border-white/10 shadow-2xl relative !overflow-visible">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-bold text-foreground">
                   {transactionToEdit ? 'Edit Transaction' : 'Add Transaction'}
@@ -249,9 +249,9 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
                               </div>
                             </div>
                           ) : (
-                            <div className="p-6 flex flex-col items-center justify-center text-center">
+                            <div className="p-6 flex flex-col items-center justify-center text-center" style={{ minHeight: '160px' }}>
                               <Wallet className="h-8 w-8 text-muted-foreground mb-3 opacity-50" />
-                              <p className="text-sm font-medium text-foreground mb-1">No account found</p>
+                              <p className="text-sm font-medium text-foreground mb-1">No accounts found</p>
                               <Button
                                 type="button"
                                 onClick={() => {

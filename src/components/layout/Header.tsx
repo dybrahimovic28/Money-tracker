@@ -1,7 +1,6 @@
 import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '../ui/ThemeToggle'
 import { NotificationBell } from '../ui/NotificationBell'
-import { AccountSwitcher } from '../ui/AccountSwitcher'
 import { format } from 'date-fns'
 
 export function Header() {
@@ -32,7 +31,6 @@ export function Header() {
 
       <div className="flex items-center space-x-4">
         <div className="hidden md:flex items-center space-x-3">
-          <AccountSwitcher />
           <ThemeToggle />
           <NotificationBell count={2} />
         </div>
