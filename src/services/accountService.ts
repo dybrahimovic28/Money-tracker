@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { Account } from '@/types'
+import { saveToSyncQueue } from '@/lib/offline-sync'
 
 export const accountService = {
   async getAccounts(userId: string) {
@@ -66,10 +67,12 @@ export const accountService = {
     localStorage.setItem(`accounts_${account.user_id}`, JSON.stringify(accounts))
     
     // add to sync queue
-    const queueStr = localStorage.getItem('sync_queue_accounts') || '[]'
-    const queue = JSON.parse(queueStr)
-    queue.push({ action: 'create', data: newAccount })
-    localStorage.setItem('sync_queue_accounts', JSON.stringify(queue))
+    saveToSyncQueue({
+      type: 'CREATE',
+      table: 'accounts',
+      payload: newAccount,
+      userId: account.user_id
+    })
     
     return newAccount
   },
@@ -83,6 +86,12 @@ export const accountService = {
         accounts[index] = { ...accounts[index], ...updates }
         localStorage.setItem(`accounts_${userId}`, JSON.stringify(accounts))
       }
+      saveToSyncQueue({
+        type: 'UPDATE',
+        table: 'accounts',
+        payload: { ...updates, id },
+        userId
+      })
       return accounts[index]
     }
 
@@ -116,6 +125,12 @@ export const accountService = {
       const accounts = this.getLocalAccounts(userId)
       const filtered = accounts.filter(a => a.id !== id)
       localStorage.setItem(`accounts_${userId}`, JSON.stringify(filtered))
+      saveToSyncQueue({
+        type: 'DELETE',
+        table: 'accounts',
+        payload: { id },
+        userId
+      })
       return id
     }
 
@@ -149,6 +164,13 @@ export const accountService = {
       const filtered = accounts.filter(a => a.id !== id)
       localStorage.setItem(`accounts_${userId}`, JSON.stringify(filtered))
       
+      saveToSyncQueue({
+        type: 'DELETE',
+        table: 'accounts',
+        payload: { id },
+        userId
+      })
+
       return id
     }
 

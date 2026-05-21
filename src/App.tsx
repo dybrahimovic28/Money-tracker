@@ -11,10 +11,33 @@ import { Settings } from './pages/Settings'
 import { Debts } from './pages/Debts'
 
 import { NotFound } from './pages/NotFound'
+import { PwaInstallPrompt } from './components/ui/PwaInstallPrompt'
+import { PwaUpdatePrompt } from './components/ui/PwaUpdatePrompt'
+import { useEffect } from 'react'
+import { supabase } from './lib/supabase'
+import { syncOfflineTransactions } from './lib/offline-sync'
+
+function SyncManager() {
+  useEffect(() => {
+    const handleOnline = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        syncOfflineTransactions(session.user.id)
+      }
+    }
+    window.addEventListener('online', handleOnline)
+    return () => window.removeEventListener('online', handleOnline)
+  }, [])
+  return null
+}
 
 function App() {
   return (
-    <Routes>
+    <>
+      <SyncManager />
+      <PwaInstallPrompt />
+      <PwaUpdatePrompt />
+      <Routes>
       <Route path="/login" element={<Login />} />
       <Route
         path="/"
@@ -35,6 +58,7 @@ function App() {
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </>
   )
 }
 

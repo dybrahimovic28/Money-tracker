@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { Transaction } from '@/types'
-import { saveTransactionOffline } from '@/lib/offline-sync'
+import { saveTransactionOffline, saveToSyncQueue } from '@/lib/offline-sync'
 
 export const transactionService = {
   async getTransactions(userId: string, accountId: string | null = null) {
@@ -36,6 +36,19 @@ export const transactionService = {
   },
 
   async updateTransaction(id: string, updates: Partial<Transaction>) {
+    if (!navigator.onLine) {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        await saveToSyncQueue({
+          type: 'UPDATE',
+          table: 'transactions',
+          payload: { ...updates, id },
+          userId: session.user.id
+        })
+      }
+      return { ...updates, id } as Transaction
+    }
+
     const { data, error } = await supabase
       .from('transactions')
       .update(updates)
@@ -48,6 +61,19 @@ export const transactionService = {
   },
 
   async deleteTransaction(id: string) {
+    if (!navigator.onLine) {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        await saveToSyncQueue({
+          type: 'DELETE',
+          table: 'transactions',
+          payload: { id },
+          userId: session.user.id
+        })
+      }
+      return id
+    }
+
     const { error } = await supabase
       .from('transactions')
       .delete()

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { Debt } from '@/types'
+import { saveToSyncQueue } from '@/lib/offline-sync'
 
 export const debtService = {
   async getDebts(userId: string, accountId: string | null = null) {
@@ -68,11 +69,12 @@ export const debtService = {
     const debts = this.getLocalDebts(debt.user_id, null)
     debts.unshift(newDebt)
     localStorage.setItem(`debts_${debt.user_id}`, JSON.stringify(debts))
-    
-    const queueStr = localStorage.getItem('sync_queue_debts') || '[]'
-    const queue = JSON.parse(queueStr)
-    queue.push({ action: 'create', data: newDebt })
-    localStorage.setItem('sync_queue_debts', JSON.stringify(queue))
+    saveToSyncQueue({
+      type: 'CREATE',
+      table: 'debts',
+      payload: newDebt,
+      userId: debt.user_id
+    })
     
     return newDebt
   },
@@ -85,6 +87,12 @@ export const debtService = {
         debts[index] = { ...debts[index], ...updates }
         localStorage.setItem(`debts_${userId}`, JSON.stringify(debts))
       }
+      saveToSyncQueue({
+        type: 'UPDATE',
+        table: 'debts',
+        payload: { ...updates, id },
+        userId
+      })
       return debts[index]
     }
 
@@ -104,6 +112,12 @@ export const debtService = {
       const debts = this.getLocalDebts(userId, null)
       const filtered = debts.filter(d => d.id !== id)
       localStorage.setItem(`debts_${userId}`, JSON.stringify(filtered))
+      saveToSyncQueue({
+        type: 'DELETE',
+        table: 'debts',
+        payload: { id },
+        userId
+      })
       return id
     }
 

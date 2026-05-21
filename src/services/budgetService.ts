@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { Budget } from '@/types'
+import { saveToSyncQueue } from '@/lib/offline-sync'
 
 const BUDGETS_CACHE_KEY = 'money-tracker-budgets-cache'
 
@@ -70,6 +71,12 @@ export const budgetService = {
       return data as Budget
     } catch (err) {
       console.warn('Failed to save budget to Supabase, saved offline only', err)
+      saveToSyncQueue({
+        type: existingIndex > -1 ? 'UPDATE' : 'CREATE',
+        table: 'budgets',
+        payload: existingIndex > -1 ? { id: list[existingIndex].id, amount_limit: budget.amount_limit } : newBudget,
+        userId: budget.user_id
+      })
       return existingIndex > -1 ? list[existingIndex] : newBudget
     }
   },
@@ -91,6 +98,15 @@ export const budgetService = {
       if (error) throw error
     } catch (err) {
       console.warn('Failed to delete budget from Supabase, deleted locally', err)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        saveToSyncQueue({
+          type: 'DELETE',
+          table: 'budgets',
+          payload: { id },
+          userId: session.user.id
+        })
+      }
     }
     return id
   },

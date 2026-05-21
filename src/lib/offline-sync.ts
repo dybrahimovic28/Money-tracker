@@ -1,11 +1,42 @@
-import { set, get, del, keys } from 'idb-keyval';
+import { set, get } from 'idb-keyval';
 import { supabase } from './supabase';
-import { Transaction } from '@/types';
 import toast from 'react-hot-toast';
 import { queryClient } from './queryClient';
+import { Transaction } from '@/types';
 
-const PENDING_PREFIX = 'pending_tx_';
+export type SyncActionType = 'CREATE' | 'UPDATE' | 'DELETE';
+export type SyncTable = 'transactions' | 'accounts' | 'budgets' | 'debts';
 
+export interface SyncAction {
+  id: string;
+  timestamp: number;
+  type: SyncActionType;
+  table: SyncTable;
+  payload: any;
+  userId: string;
+}
+
+const QUEUE_KEY = 'offline_sync_queue';
+
+export async function getSyncQueue(): Promise<SyncAction[]> {
+  const queue = await get(QUEUE_KEY);
+  return queue ? (JSON.parse(queue) as SyncAction[]) : [];
+}
+
+export async function saveToSyncQueue(action: Omit<SyncAction, 'id' | 'timestamp'>) {
+  const queue = await getSyncQueue();
+  const newAction: SyncAction = {
+    ...action,
+    id: crypto.randomUUID(),
+    timestamp: Date.now(),
+  };
+  
+  queue.push(newAction);
+  await set(QUEUE_KEY, JSON.stringify(queue));
+  toast('Saved offline. Will sync when connection returns.', { icon: '📡' });
+}
+
+// Deprecated signature, updating to queue
 export async function saveTransactionOffline(transaction: Omit<Transaction, 'id' | 'created_at'>) {
   const tempId = crypto.randomUUID();
   const offlineTx = {
@@ -14,51 +45,69 @@ export async function saveTransactionOffline(transaction: Omit<Transaction, 'id'
     created_at: new Date().toISOString(),
     isPendingSync: true,
   };
-  await set(`${PENDING_PREFIX}${tempId}`, offlineTx);
   
-  toast('Saved offline. Will sync when connection returns.', { icon: '📡' });
+  await saveToSyncQueue({
+    type: 'CREATE',
+    table: 'transactions',
+    payload: offlineTx,
+    userId: transaction.user_id
+  });
+
   return offlineTx as unknown as Transaction;
 }
 
-export async function getPendingTransactions() {
-  const allKeys = await keys();
-  const pendingKeys = allKeys.filter(key => typeof key === 'string' && key.startsWith(PENDING_PREFIX));
-  
-  const transactions = [];
-  for (const key of pendingKeys) {
-    const tx = await get(key as string);
-    if (tx) transactions.push(tx);
-  }
-  return transactions;
-}
-
+// Replaces the old syncOfflineTransactions logic
 export async function syncOfflineTransactions(userId: string) {
   if (!navigator.onLine) return;
 
-  const pendingTxs = await getPendingTransactions();
-  if (pendingTxs.length === 0) return;
+  const queue = await getSyncQueue();
+  if (queue.length === 0) return;
 
-  // Filter transactions belonging to the current user
-  const userPendingTxs = pendingTxs.filter(tx => tx.user_id === userId);
-  if (userPendingTxs.length === 0) return;
+  // Filter actions for this user
+  const userActions = queue.filter(a => a.userId === userId);
+  const otherActions = queue.filter(a => a.userId !== userId);
 
-  const cleanTxs = userPendingTxs.map(tx => {
-    const { isPendingSync, id, ...rest } = tx;
-    return rest; // Let Supabase assign the final ID
-  });
+  if (userActions.length === 0) return;
 
-  const { error } = await supabase.from('transactions').insert(cleanTxs);
+  let successCount = 0;
+  const failedActions: SyncAction[] = [];
 
-  if (!error) {
-    // Clear synced from idb
-    for (const tx of userPendingTxs) {
-      await del(`${PENDING_PREFIX}${tx.id}`);
+  for (const action of userActions) {
+    try {
+      const { type, table, payload } = action;
+      let error = null;
+
+      const cleanPayload = { ...payload };
+      delete cleanPayload.isPendingSync;
+
+      if (type === 'CREATE') {
+        const { error: err } = await supabase.from(table).insert(cleanPayload);
+        error = err;
+      } else if (type === 'UPDATE') {
+        const { error: err } = await supabase.from(table).update(cleanPayload).eq('id', cleanPayload.id);
+        error = err;
+      } else if (type === 'DELETE') {
+        const { error: err } = await supabase.from(table).delete().eq('id', cleanPayload.id);
+        error = err;
+      }
+
+      if (error) {
+        console.error(`Failed to process action ${action.id}:`, error);
+        failedActions.push(action);
+      } else {
+        successCount++;
+      }
+    } catch (err) {
+      console.error(`Exception processing action ${action.id}:`, err);
+      failedActions.push(action);
     }
-    
-    toast.success(`Synced ${userPendingTxs.length} offline transactions`);
-    queryClient.invalidateQueries({ queryKey: ['transactions', userId] });
-  } else {
-    console.error('Offline sync failed', error);
+  }
+
+  // Save back failed + other users' actions
+  await set(QUEUE_KEY, JSON.stringify([...otherActions, ...failedActions]));
+
+  if (successCount > 0) {
+    toast.success(`Synced ${successCount} offline actions`);
+    queryClient.invalidateQueries();
   }
 }
-

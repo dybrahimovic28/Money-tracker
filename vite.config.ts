@@ -8,14 +8,14 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'Money Tracker',
         short_name: 'MoneyTracker',
         description: 'Premium multi-currency finance tracking app',
-        theme_color: '#0b1329',
-        background_color: '#0b1329',
+        theme_color: '#071225',
+        background_color: '#071225',
         display: 'standalone',
         orientation: 'portrait',
         icons: [
@@ -36,6 +36,11 @@ export default defineConfig({
             purpose: 'any maskable'
           }
         ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,ttf}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/]
       }
     })
   ],
