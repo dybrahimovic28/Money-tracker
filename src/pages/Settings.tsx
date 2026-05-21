@@ -1,15 +1,21 @@
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/hooks/useTheme'
 import { useCurrency } from '@/context/CurrencyContext'
-import { LogOut, RefreshCw, Trash2, Info } from 'lucide-react'
+import { LogOut, RefreshCw, Trash2, Info, ChevronDown, Plus, User } from 'lucide-react'
 import { useProfile } from '@/hooks/useProfile'
+import { useCustomCurrencies } from '@/hooks/useCustomCurrencies'
+import { CustomCurrencyModal } from '@/components/ui/CustomCurrencyModal'
 import { queryClient } from '@/lib/queryClient'
 import { syncOfflineTransactions } from '@/lib/offline-sync'
 import toast from 'react-hot-toast'
 import versionInfo from '../../public/version.json'
 import { ResetDataModal, ResetType } from '@/components/ui/ResetDataModal'
+import { useAccounts } from '@/context/AccountContext'
+import { DeleteAccountModal } from '@/components/ui/DeleteAccountModal'
+import { AccountModal } from '@/components/ui/AccountModal'
+import { Account } from '@/types'
 import { useState, useRef } from 'react'
 import { budgetService } from '@/services/budgetService'
 import { debtService } from '@/services/debtService'
@@ -19,10 +25,18 @@ import { transactionService } from '@/services/transactionService'
 export function Settings() {
   const { user, signOut } = useAuth()
   const { mode, setTheme } = useTheme()
-  const { currency, setCurrency, formatCurrencyByAccount } = useCurrency()
+  const { currency, setCurrency } = useCurrency()
   const { profile, updateProfile } = useProfile()
+  const { allCurrencies, removeCustomCurrency } = useCustomCurrencies()
+  const { accounts, refreshAccounts, selectedAccountId, setSelectedAccountId } = useAccounts()
   const [resetModalOpen, setResetModalOpen] = useState(false)
   const [resetType, setResetType] = useState<ResetType>('Factory')
+  const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false)
+  const [isCustomCurrencyModalOpen, setIsCustomCurrencyModalOpen] = useState(false)
+  const [accountToEdit, setAccountToEdit] = useState<Account | undefined>(undefined)
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
+  const [accountToDelete, setAccountToDelete] = useState<Account | undefined>(undefined)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const undoTimeoutRef = useRef<number | null>(null)
   const handleCurrencyChange = async (newCurrency: string) => {
     setCurrency(newCurrency)
@@ -112,12 +126,11 @@ export function Settings() {
         <div className="space-y-6">
           <GlassCard intensity="low" className="p-6 space-y-6">
             <div className="flex items-center space-x-4">
-              <div className="h-20 w-20 rounded-full border-2 border-primary/20 bg-muted overflow-hidden">
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}&backgroundColor=transparent`} alt="Avatar" />
+              <div className="h-20 w-20 flex items-center justify-center rounded-full border-2 border-primary/20 bg-muted overflow-hidden">
+                <User className="h-10 w-10 text-muted-foreground" />
               </div>
               <div>
                 <h3 className="text-lg font-medium">{profile?.full_name || profile?.email || user?.email}</h3>
-                <p className="text-sm text-muted-foreground">{profile?.role === 'admin' ? 'Admin Plan' : 'Free Plan'}</p>
               </div>
             </div>
 
@@ -147,16 +160,83 @@ export function Settings() {
 
             <div className="space-y-4 pt-4 border-t border-white/5">
               <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Base Currency</h4>
-              <select 
-                value={currency}
-                onChange={(e) => handleCurrencyChange(e.target.value)}
-                className="w-full p-3 rounded-xl bg-background border border-white/10 text-foreground focus:ring-1 focus:ring-primary outline-none"
-              >
-                <option value="USD">USD - US Dollar</option>
-                <option value="EUR">EUR - Euro</option>
-                <option value="GBP">GBP - British Pound</option>
-                <option value="ZMW">ZMW - Zambian Kwacha</option>
-              </select>
+              
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl bg-background border border-white/10 text-foreground focus:ring-1 focus:ring-primary outline-none hover:bg-white/5 transition-colors"
+                >
+                  <span className="font-medium">
+                    {allCurrencies.find(c => c.code === currency)?.code} - {allCurrencies.find(c => c.code === currency)?.name}
+                  </span>
+                  <motion.div animate={{ rotate: isCurrencyDropdownOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </motion.div>
+                </button>
+
+                <AnimatePresence>
+                  {isCurrencyDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="mt-2 bg-card border border-white/10 rounded-xl overflow-hidden backdrop-blur-md"
+                    >
+                      <div className="py-1 max-h-60 overflow-y-auto">
+                        {allCurrencies.map(c => (
+                          <div
+                            key={c.code}
+                            className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors group ${currency === c.code ? 'bg-primary/10 text-primary' : 'hover:bg-white/5 text-foreground'}`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleCurrencyChange(c.code)
+                                setIsCurrencyDropdownOpen(false)
+                              }}
+                              className="flex-1 text-left flex items-center"
+                            >
+                              <span className="font-medium mr-2">{c.code}</span>
+                              <span className="text-muted-foreground truncate">- {c.name}</span>
+                            </button>
+                            
+                            {!c.isDefault && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  removeCustomCurrency(c.code)
+                                  if (currency === c.code) {
+                                    handleCurrencyChange('USD') // Reset to default if deleted
+                                  }
+                                }}
+                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-500/20 text-red-400 transition-all"
+                                title="Delete Custom Currency"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <div className="border-t border-white/5 mt-1 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsCurrencyDropdownOpen(false)
+                              setIsCustomCurrencyModalOpen(true)
+                            }}
+                            className="w-full flex items-center justify-center px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors"
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Add Custom Currency
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             <div className="space-y-4 pt-4 border-t border-white/5">
@@ -165,7 +245,7 @@ export function Settings() {
                 <label className="text-sm block mb-1">Target Monthly Income</label>
                 <div className="relative">
                   <span className="absolute left-3 top-3 text-muted-foreground font-medium">
-                    {formatCurrencyByAccount() === 'USD' ? '$' : formatCurrencyByAccount()}
+                    {allCurrencies.find(c => c.code === currency)?.symbol || '$'}
                   </span>
                   <input 
                     type="number"
@@ -183,6 +263,56 @@ export function Settings() {
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Used to calculate your monthly progress on the dashboard.</p>
               </div>
+            </div>
+
+            {/* Account Management Section */}
+            <div className="space-y-4 pt-4 border-t border-white/5">
+              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Account Management</h4>
+              {accounts.length === 0 ? (
+                <div className="bg-background/50 border border-white/10 rounded-xl p-6 text-center">
+                  <p className="text-muted-foreground mb-4">No accounts created</p>
+                  <button 
+                    onClick={() => {
+                      setAccountToEdit(undefined)
+                      setIsAccountModalOpen(true)
+                    }}
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm transition-colors hover:bg-primary/90"
+                  >
+                    + Create Account
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {accounts.map(account => (
+                    <div key={account.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-background/50 border border-white/10 rounded-xl gap-4">
+                      <div>
+                        <h5 className="font-semibold">{account.name}</h5>
+                        <p className="text-sm text-muted-foreground">{account.currency_code}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            setAccountToEdit(account)
+                            setIsAccountModalOpen(true)
+                          }}
+                          className="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-sm font-medium transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            setAccountToDelete(account)
+                            setIsDeleteModalOpen(true)
+                          }}
+                          className="px-3 py-1.5 rounded-lg border border-destructive/20 text-destructive hover:bg-destructive/10 text-sm font-medium transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* System Actions */}
@@ -264,6 +394,38 @@ export function Settings() {
         onClose={() => setResetModalOpen(false)}
         onConfirm={handleConfirmReset}
         type={resetType}
+      />
+      <CustomCurrencyModal 
+        isOpen={isCustomCurrencyModalOpen}
+        onClose={() => setIsCustomCurrencyModalOpen(false)}
+        onSuccess={(code) => handleCurrencyChange(code)}
+      />
+      <AccountModal 
+        isOpen={isAccountModalOpen}
+        onClose={() => setIsAccountModalOpen(false)}
+        accountToEdit={accountToEdit}
+      />
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        accountName={accountToDelete?.name || ''}
+        onConfirm={async () => {
+          if (accountToDelete && user) {
+            await accountService.deleteAccountWithData(accountToDelete.id, user.id)
+            await refreshAccounts()
+            
+            if (selectedAccountId === accountToDelete.id) {
+              const remainingAccounts = accounts.filter(a => a.id !== accountToDelete.id)
+              if (remainingAccounts.length > 0) {
+                setSelectedAccountId(remainingAccounts[0].id)
+              } else {
+                setSelectedAccountId('')
+              }
+            }
+            
+            toast.success('Account completely removed')
+          }
+        }}
       />
     </motion.div>
   )

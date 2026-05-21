@@ -102,13 +102,11 @@ export const accountService = {
       // Check offline records first
       const txs = JSON.parse(localStorage.getItem(`transactions_${userId}`) || '[]')
       const budgets = JSON.parse(localStorage.getItem(`budgets_${userId}`) || '[]')
-      const goals = JSON.parse(localStorage.getItem(`savings_goals_${userId}`) || '[]')
       const debts = JSON.parse(localStorage.getItem(`debts_${userId}`) || '[]')
       
       const hasRecords = 
         txs.some((t: any) => t.account_id === id) ||
         budgets.some((b: any) => b.account_id === id) ||
-        goals.some((g: any) => g.account_id === id) ||
         debts.some((d: any) => d.account_id === id)
 
       if (hasRecords) {
@@ -132,6 +130,46 @@ export const accountService = {
       }
       throw error
     }
+    return id
+  },
+
+  async deleteAccountWithData(id: string, userId: string) {
+    if (!navigator.onLine) {
+      // Offline delete records
+      const txs = JSON.parse(localStorage.getItem(`transactions_${userId}`) || '[]').filter((t: any) => t.account_id !== id)
+      localStorage.setItem(`transactions_${userId}`, JSON.stringify(txs))
+
+      const budgets = JSON.parse(localStorage.getItem(`budgets_${userId}`) || '[]').filter((b: any) => b.account_id !== id)
+      localStorage.setItem(`budgets_${userId}`, JSON.stringify(budgets))
+
+      const debts = JSON.parse(localStorage.getItem(`debts_${userId}`) || '[]').filter((d: any) => d.account_id !== id)
+      localStorage.setItem(`debts_${userId}`, JSON.stringify(debts))
+
+      const accounts = this.getLocalAccounts(userId)
+      const filtered = accounts.filter(a => a.id !== id)
+      localStorage.setItem(`accounts_${userId}`, JSON.stringify(filtered))
+      
+      return id
+    }
+
+    // Online delete - delete linked data first to respect FK constraints if cascade isn't set up
+    await supabase.from('transactions').delete().eq('account_id', id)
+    await supabase.from('budgets').delete().eq('account_id', id)
+    await supabase.from('debts').delete().eq('account_id', id)
+
+    // Finally delete account
+    const { error } = await supabase
+      .from('accounts')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+
+    // Sync local storage state since we bypassed normal fetches
+    const accounts = this.getLocalAccounts(userId)
+    const filtered = accounts.filter(a => a.id !== id)
+    localStorage.setItem(`accounts_${userId}`, JSON.stringify(filtered))
+
     return id
   },
 

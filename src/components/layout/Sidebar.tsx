@@ -24,7 +24,7 @@ export function Sidebar() {
   return (
     <motion.div 
       initial={false}
-      animate={{ width: collapsed ? '80px' : '280px' }}
+      animate={{ width: collapsed ? '80px' : '320px' }}
       className="hidden md:flex relative h-full flex-col border-r border-white/5 bg-card/40 glass z-40 transition-all duration-300"
     >
       <div className="flex h-20 items-center justify-between px-6 border-b border-white/5">

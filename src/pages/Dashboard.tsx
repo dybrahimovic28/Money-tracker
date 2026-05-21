@@ -14,6 +14,7 @@ import { format } from 'date-fns'
 import { useState } from 'react'
 import { useAccounts } from '@/context/AccountContext'
 import { TransactionModal } from '@/components/ui/TransactionModal'
+import { AccountModal } from '@/components/ui/AccountModal'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useProfile } from '@/hooks/useProfile'
@@ -24,10 +25,11 @@ export function Dashboard() {
   const { profile } = useProfile()
   const { stats, isLoading, activeTransactions } = useDashboardStats()
   const { budgetStats } = useBudgets()
-  const { selectedAccountId } = useAccounts()
+  const { selectedAccountId, accounts } = useAccounts()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalDefaultType, setModalDefaultType] = useState<'income' | 'expense'>('expense')
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -39,6 +41,33 @@ export function Dashboard() {
           <SkeletonLoader className="h-24 w-full rounded-2xl" />
         </div>
       </div>
+    )
+  }
+
+  if (accounts.length === 0) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center min-h-[60vh] px-4"
+      >
+        <div className="bg-[#071225] border border-white/10 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 mb-6">
+            <Wallet className="h-8 w-8 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">No Accounts Created</h2>
+          <p className="text-muted-foreground mb-8">
+            Create your first account to start tracking finances.
+          </p>
+          <button 
+            onClick={() => setIsAccountModalOpen(true)}
+            className="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold text-lg hover:bg-primary/90 transition-colors"
+          >
+            + Create Account
+          </button>
+        </div>
+        <AccountModal isOpen={isAccountModalOpen} onClose={() => setIsAccountModalOpen(false)} />
+      </motion.div>
     )
   }
 

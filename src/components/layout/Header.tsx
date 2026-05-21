@@ -2,6 +2,7 @@ import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '../ui/ThemeToggle'
 import { NotificationBell } from '../ui/NotificationBell'
 import { format } from 'date-fns'
+import { User } from 'lucide-react'
 
 export function Header() {
   const { user } = useAuth()
@@ -35,12 +36,8 @@ export function Header() {
           <NotificationBell count={2} />
         </div>
         
-        <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-primary/20 bg-muted">
-          <img
-            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}&backgroundColor=transparent`}
-            alt="User avatar"
-            className="h-full w-full object-cover"
-          />
+        <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-primary/20 bg-muted flex items-center justify-center">
+          <User className="h-5 w-5 text-muted-foreground" />
         </div>
       </div>
     </header>
