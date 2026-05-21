@@ -78,16 +78,9 @@ export function Login() {
             />
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Password
-              </label>
-              {!isSignUp && (
-                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                  Forgot Password?
-                </Link>
-              )}
-            </div>
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Password
+            </label>
             <Input
               type="password"
               placeholder="••••••••"
@@ -95,6 +88,16 @@ export function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            {!isSignUp && (
+              <div className="flex justify-end">
+                <Link 
+                  to="/forgot-password" 
+                  className="text-sm text-gray-400 hover:text-white hover:underline transition-all duration-200"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+            )}
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
