@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Calendar, FileText, AlertCircle } from 'lucide-react'
+import { X, Calendar, FileText, AlertCircle, ChevronDown, Wallet } from 'lucide-react'
 import { GlassCard } from './GlassCard'
 import { Input } from './input'
 import { Button } from './button'
@@ -11,6 +11,7 @@ import { Transaction } from '@/types'
 import toast from 'react-hot-toast'
 import { transactionService } from '@/services/transactionService'
 import { dashboardService } from '@/services/dashboardService'
+import { AccountModal } from './AccountModal'
 
 interface TransactionModalProps {
   isOpen: boolean
@@ -34,6 +35,20 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
   const [notes, setNotes] = useState('')
   const [createdAt, setCreatedAt] = useState('')
   const [accountId, setAccountId] = useState('')
+
+  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false)
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
+  const accountDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (accountDropdownRef.current && !accountDropdownRef.current.contains(event.target as Node)) {
+        setIsAccountDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -144,8 +159,9 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
   if (!isOpen) return null
 
   return (
-    <AnimatePresence>
-      {isOpen && (
+    <>
+      <AnimatePresence>
+        {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -175,17 +191,83 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
                 {/* Account Selection */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-muted-foreground">Account</label>
-                  <select 
-                    required
-                    value={accountId}
-                    onChange={(e) => setAccountId(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-background/50 border border-white/10 text-foreground focus:ring-1 focus:ring-primary outline-none [&>option]:bg-white [&>option]:text-black"
-                  >
-                    <option value="" disabled>Select Account</option>
-                    {accounts.map(acc => (
-                      <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency_code})</option>
-                    ))}
-                  </select>
+                  
+                  <div className="relative" ref={accountDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                      className="w-full flex items-center justify-between p-3 rounded-xl bg-background/50 border border-white/10 text-foreground focus:ring-1 focus:ring-primary outline-none hover:bg-white/5 transition-colors"
+                    >
+                      {accountId ? (
+                        <div className="flex items-center">
+                          <span className="font-medium">{accounts.find(a => a.id === accountId)?.name}</span>
+                          <span className="ml-2 text-xs text-muted-foreground bg-white/10 px-2 py-0.5 rounded">
+                            {accounts.find(a => a.id === accountId)?.currency_code}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Select Account</span>
+                      )}
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </button>
+
+                    <AnimatePresence>
+                      {isAccountDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute z-50 w-full mt-2 bg-card border border-white/10 rounded-xl shadow-xl overflow-hidden backdrop-blur-md max-h-60 overflow-y-auto"
+                        >
+                          {accounts.length > 0 ? (
+                            <div className="py-1">
+                              {accounts.map(acc => (
+                                <button
+                                  key={acc.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setAccountId(acc.id)
+                                    setIsAccountDropdownOpen(false)
+                                  }}
+                                  className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${accountId === acc.id ? 'bg-primary/10 text-primary' : 'hover:bg-white/5 text-foreground'}`}
+                                >
+                                  <span className="font-medium">{acc.name}</span>
+                                  <span className="text-xs bg-white/10 px-2 py-0.5 rounded text-muted-foreground">{acc.currency_code}</span>
+                                </button>
+                              ))}
+                              <div className="border-t border-white/5 mt-1 pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIsAccountDropdownOpen(false)
+                                    setIsAccountModalOpen(true)
+                                  }}
+                                  className="w-full flex items-center justify-center px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors"
+                                >
+                                  + Create Account / Wallet
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-6 flex flex-col items-center justify-center text-center">
+                              <Wallet className="h-8 w-8 text-muted-foreground mb-3 opacity-50" />
+                              <p className="text-sm font-medium text-foreground mb-1">No account found</p>
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  setIsAccountDropdownOpen(false)
+                                  setIsAccountModalOpen(true)
+                                }}
+                                className="w-full mt-4"
+                              >
+                                Create Account
+                              </Button>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 {/* Transaction Type Toggle */}
@@ -294,6 +376,15 @@ export function TransactionModal({ isOpen, onClose, transactionToEdit, defaultTy
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+      <AccountModal 
+        isOpen={isAccountModalOpen} 
+        onClose={() => setIsAccountModalOpen(false)} 
+        onSuccess={(id) => {
+          setAccountId(id)
+          setIsAccountModalOpen(false)
+        }}
+      />
+    </>
   )
 }
