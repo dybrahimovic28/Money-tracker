@@ -2,6 +2,8 @@ import { Routes, Route } from 'react-router-dom'
 import { Layout } from './components/layout/Layout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Login } from './pages/Login'
+import { ForgotPassword } from './pages/ForgotPassword'
+import { ResetPassword } from './pages/ResetPassword'
 import { Dashboard } from './pages/Dashboard'
 import { Transactions } from './pages/Transactions'
 import { Budgets } from './pages/Budgets'
@@ -39,6 +41,8 @@ function App() {
       <PwaUpdatePrompt />
       <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="/"
         element={

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
@@ -78,9 +78,16 @@ export function Login() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Password
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Password
+              </label>
+              {!isSignUp && (
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                  Forgot Password?
+                </Link>
+              )}
+            </div>
             <Input
               type="password"
               placeholder="••••••••"
